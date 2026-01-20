@@ -1,0 +1,76 @@
+#the snake for beam_on_status
+rule beam_on_status:
+    input: 
+        script="beam_on_status"
+
+    output:
+        "rootfile/run{runnumber}_{clsize}_beam_on_status.root"  
+    log:
+        "logs/run{runnumber}_{clsize}.log"
+    benchmark:
+        "benchmarks/run{runnumber}_{clsize}.log"
+    shell:
+        '''
+        {input.script} run{wildcards.runnumber} {wildcards.clsize}\
+        > {log} 2>&1
+        '''
+
+rule maketestfile:
+    input:
+        "rootfile/run5_4_beam_on_status.root",
+        "rootfile/run26_4_beam_on_status.root",
+        "rootfile/run35_4_beam_on_status.root",
+
+rule makerun14file:
+    input:
+        "rootfile/run1_4_beam_on_status.root",
+        "rootfile/run2_4_beam_on_status.root",
+        "rootfile/run3_4_beam_on_status.root",
+        "rootfile/run4_4_beam_on_status.root"
+
+
+
+rule makeallfile:
+    input:
+        "rootfile/run5_4_beam_on_status.root",
+        "rootfile/run6_4_beam_on_status.root",
+        "rootfile/run7_4_beam_on_status.root",
+        "rootfile/run8_4_beam_on_status.root",
+        "rootfile/run9_4_beam_on_status.root",
+        "rootfile/run10_4_beam_on_status.root",
+        "rootfile/run11_4_beam_on_status.root",
+        "rootfile/run12_4_beam_on_status.root",
+        "rootfile/run13_4_beam_on_status.root",
+        "rootfile/run14_4_beam_on_status.root",
+        "rootfile/run15_4_beam_on_status.root",
+        "rootfile/run16_4_beam_on_status.root",
+        "rootfile/run17_4_beam_on_status.root",
+        "rootfile/run18_4_beam_on_status.root",
+        "rootfile/run19_4_beam_on_status.root",
+        "rootfile/run20_4_beam_on_status.root",
+        "rootfile/run21_4_beam_on_status.root",
+        "rootfile/run22_4_beam_on_status.root",
+        "rootfile/run23_4_beam_on_status.root",
+        "rootfile/run24_4_beam_on_status.root",
+        "rootfile/run25_4_beam_on_status.root",
+        "rootfile/run26_4_beam_on_status.root",
+        "rootfile/run27_4_beam_on_status.root",
+        "rootfile/run28_4_beam_on_status.root",
+        "rootfile/run29_4_beam_on_status.root",
+        "rootfile/run30_4_beam_on_status.root",
+        "rootfile/run31_4_beam_on_status.root",
+        "rootfile/run32_4_beam_on_status.root",
+        "rootfile/run33_4_beam_on_status.root",
+        "rootfile/run34_4_beam_on_status.root",
+        "rootfile/run35_4_beam_on_status.root",
+        "rootfile/run36_4_beam_on_status.root",
+        "rootfile/run37_4_beam_on_status.root",
+        "rootfile/run38_4_beam_on_status.root",
+        "rootfile/run39_4_beam_on_status.root",
+        "rootfile/run40_4_beam_on_status.root",
+        "rootfile/run41_4_beam_on_status.root"
+
+
+
+
+

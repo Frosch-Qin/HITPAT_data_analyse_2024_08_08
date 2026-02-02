@@ -33,43 +33,41 @@ distribution providing the above dependencies.
 
 ## How to run
 
+There are two applications here. One under folder`cal_pre, and one under `app`
 Each folder contains one GNU Makefile to build the code.
 
-For example, to run `beam_on_status`:
+For example, to run `app/main`:
 
 ```bash
-cd beam_on_status
+cd app
 make clean; make
-./beam_on_status run5 4
+./main dataset_path runID
 ```
 
-or using Snakemake:
+<!-- or using Snakemake:
 ```bash
 snakemake -r -j 4 maketestfile
-```
+``` -->
 
 ## Folder structure
 
-The `hitreader` folder contains the core headers for reading and analyzing beam data:
+The `app/main.cpp` file is the main application. Different analysis processes can be easily pipelined in `main.cpp`.
 
-- **`hitreader/analyser.h`**  
-  Top-level header for all folders; includes general analysis utilities.
+- **`src/analysis`**  
+  Contains different analysis processes.  
+  All analyses follow the `IAnalyzer.h` interface, enabling an easy pipeline structure in `main.cpp`.  
+  Detailed analysis modules are located under `src/analysis/modules/`.
 
-- **`hitreader/hitreader.h`**  
-  Interface to raw binary data (data type: `int`).  
-  Defines the raw frame structure, which may vary between measurements.  
-  As of **2024-08-08**, the raw binary files contain only calibrated data.
+- **`src/algo`**  
+  Contains clustering, RMS, and other algorithms for beam reconstruction.
 
-- **`hitreader/hitreader_float.h`**  
-  Defines the float frame structure (data type: `float`).  
-  Uses the same layout as the raw frame but stores floating-point values.  
-  Primarily used for CPU analysize, hosting calibration factors, pedestal values, etc.
 
-The `beam_on_status` folder contains code to determine the beam-on states using the clustering algorithm in the PhD thesis.
+- **`src/io`**  
+  Provides the interface to the binary dataset. Data are returned as `double`.
 
-The `cal_fac_testbeam` folder contains the calibration factors used in the test beam from run5 onward.
+The `cal_fac_testbeam` folder contains the calibration factors used in test beam runs from run 5 onward.
 
-The `cal_pre` folder contains the code for generating the calibration factor (where 1 is represented by 8192).
+The `cal_pre` folder contains the code for generating the calibration factors (where a value of 1 is represented by 8192).
 
-The `sum_signal1d` folder adds up the signals with careful pedestal subtraction.
+
 

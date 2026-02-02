@@ -5,7 +5,7 @@
 *.png
 *.txt
 
-beam_on_status/beam_on_status
+
 
 # ignore .root, but not the 2 calibration files
 *.root 
@@ -17,4 +17,6 @@ cal_pre/cal
 make_cal_root.c
 !cal_pre/calibration_factor_run19/make_cal_root.c
 
-sum_signal1d/sum_signal1d
+
+app/main
+.vscode/

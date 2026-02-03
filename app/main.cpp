@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   ctx.readout_rate = 10000; // 10 kHz
   ctx.max_frames = stream.total_frames_in_file();
   ctx.noise_run = false; // for noise run
-  ctx.FPGA_calibrated = false;
+  ctx.FPGA_calibrated = true;
 
   Fullframe frame;
   long i = 0;
@@ -77,7 +77,6 @@ int main(int argc, char **argv)
     // std::cout << "board number in the data" << frame.nrBoards << std::endl;
     FrameTags tags;
     tags.frame_index = i;
-
     pipe0.process(frame, i, tags);
 
     if (i % 100000 == 0)

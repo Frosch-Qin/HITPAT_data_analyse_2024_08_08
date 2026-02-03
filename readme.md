@@ -1,6 +1,7 @@
 ## About this project
 
 * These code are a part of a PhD work under DFG reference number: LE 4256/1-1 Project number: 419255448
+* Project: [A Scintillating fiber-based Beam Profile Monitor for Ion Therapy](https://git.physi.uni-heidelberg.de/HIT-PAT/HITDAQ/src/branch/master)
 * [License](https://git.physi.uni-heidelberg.de/HIT-PAT/HITDAQ/src/branch/master/LICENSE) under CC BY 4.0
 * Analyse code for HITPAT data collected on **2024 August 8th**.
 * The codes are built using **GNU MAKE**

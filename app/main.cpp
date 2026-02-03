@@ -15,6 +15,7 @@
 #include "../src/analysis/modules/SpillIDInput.h"
 #include "../src/analysis/modules/BkgSub.h"
 #include "../src/analysis/modules/Sum1D.h"
+#include "../src/analysis/modules/CorrMap.h"
 
 int main(int argc, char **argv)
 {
@@ -47,8 +48,8 @@ int main(int argc, char **argv)
   ctx.input_file = filename;
   ctx.nrBoards = 6;
   ctx.readout_rate = 10000; // 10 kHz
-  ctx.max_frames = stream.total_frames_in_file();
-  ctx.noise_run = false; // for noise run
+  ctx.max_frames = (max_frames == -1) ? stream.total_frames_in_file() : max_frames;
+  ctx.noise_run = true; // for noise run
   ctx.FPGA_calibrated = true;
 
   Fullframe frame;
@@ -58,40 +59,40 @@ int main(int argc, char **argv)
   //************************************************************//
   //**********************  Analyzers 0  ***********************//
   //************************************************************//
-  ctx.SpillIDfile = new TFile(Form("../output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
+  // ctx.SpillIDfile = new TFile(Form("../output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
 
-  AnalysisPipeline<Fullframe> pipe0;
-  pipe0.add(std::make_unique<BkgSub>()); 
-  pipe0.add(std::make_unique<UnCalData>());
-  pipe0.add(std::make_unique<Clustering>());
-  pipe0.add(std::make_unique<SpillIDAssigner>());
-  pipe0.name();
-  pipe0.begin_run(ctx);
+  // AnalysisPipeline<Fullframe> pipe0;
+  // pipe0.add(std::make_unique<BkgSub>()); 
+  // pipe0.add(std::make_unique<UnCalData>());
+  // pipe0.add(std::make_unique<Clustering>());
+  // pipe0.add(std::make_unique<SpillIDAssigner>());
+  // pipe0.name();
+  // pipe0.begin_run(ctx);
 
-  // ---- Frame loop ----
+  // // ---- Frame loop ----
 
 
-  while (stream.next(frame))
-  {
+  // while (stream.next(frame))
+  // {
 
-    // std::cout << "board number in the data" << frame.nrBoards << std::endl;
-    FrameTags tags;
-    tags.frame_index = i;
-    pipe0.process(frame, i, tags);
+  //   // std::cout << "board number in the data" << frame.nrBoards << std::endl;
+  //   FrameTags tags;
+  //   tags.frame_index = i;
+  //   pipe0.process(frame, i, tags);
 
-    if (i % 100000 == 0)
-    {
-      // print tag for each frame
-      std::cout << tags.to_string() << "\n";
-      std::cout << "Processing frame for SpillID " << i << "\n";
-    }
-    ++i;
-    // std::cout<< "frame ID " << i << " processed." <<std::endl;
-  }
-  pipe0.end_run(ctx);
+  //   if (i % 100000 == 0)
+  //   {
+  //     // print tag for each frame
+  //     std::cout << tags.to_string() << "\n";
+  //     std::cout << "Processing frame for SpillID " << i << "\n";
+  //   }
+  //   ++i;
+  //   // std::cout<< "frame ID " << i << " processed." <<std::endl;
+  // }
+  // pipe0.end_run(ctx);
 
-  ctx.SpillIDfile->cd();
-  ctx.SpillIDfile->Close();
+  // ctx.SpillIDfile->cd();
+  // ctx.SpillIDfile->Close();
 
   //************************************************************//
   //************************************************************//
@@ -102,12 +103,13 @@ int main(int argc, char **argv)
   ctx.rootfile->cd();
   AnalysisPipeline<Fullframe> pipe1;
   pipe1.add(std::make_unique<BkgSub>());
-  pipe1.add(std::make_unique<UnCalData>());
-  pipe1.add(std::make_unique<Clustering>());
-  pipe1.add(std::make_unique<SpillIDInput>());
+  // pipe1.add(std::make_unique<UnCalData>());
+  // pipe1.add(std::make_unique<Clustering>());
+  // pipe1.add(std::make_unique<SpillIDInput>());
   // pipe1.add(std::make_unique<FrameTagger>(10.0));
-  pipe1.add(std::make_unique<Sum1D>());
+  // pipe1.add(std::make_unique<Sum1D>());
   pipe1.add(std::make_unique<NoiseAnalyzer>());
+  pipe1.add(std::make_unique<CorrMap>());  // correlation map is very time-consuming; limits the number of frames to be analyzed
 
   pipe1.name();
   pipe1.begin_run(ctx);
@@ -125,7 +127,7 @@ int main(int argc, char **argv)
 
     pipe1.process(frame, i, tags);
 
-    if (i % 100000 == 0)
+    if (i % 10000 == 0)
     {
       // print tag for each frame
       std::cout << tags.to_string() << "\n";

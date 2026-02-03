@@ -115,6 +115,8 @@ private:
             signal_graph[i]->SetName(Form("signal_graph_%d", i));
             signal_sub_pedestalA_graph[i]->SetName(Form("signal_sub_pedestalA_graph_%d", i));
             pedestalB_sub_pedestalA_graph[i]->SetName(Form("pedestalB_sub_pedestalA_graph_%d", i));
+
+
         }
     };
 
@@ -145,6 +147,19 @@ private:
                 signal_sub_pedestalA_graph[i]->SetPoint(j, j, signal_sub_pedestalA[i][j]);
                 pedestalB_sub_pedestalA_graph[i]->SetPoint(j, j, pedestalB_sub_pedestalA[i][j]);
             }
+
+            //set X axis range 0 to 319, title ChannelID
+            pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
+            pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            pedestalB_graph[i]->GetXaxis()->SetRangeUser(0, 319);
+            pedestalB_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            signal_graph[i]->GetXaxis()->SetRangeUser(0, 319);
+            signal_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            signal_sub_pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
+            signal_sub_pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            pedestalB_sub_pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
+            pedestalB_sub_pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+
             pedestalA_graph[i]->Write();
             pedestalB_graph[i]->Write();
             signal_graph[i]->Write();

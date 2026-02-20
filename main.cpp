@@ -28,7 +28,7 @@ void spillID_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe0;
   pipe0.add(std::make_unique<BkgSub>());
-  pipe0.add(std::make_unique<UnCalData>());
+  // pipe0.add(std::make_unique<UnCalData>());
   pipe0.add(std::make_unique<Clustering>());
   pipe0.add(std::make_unique<SpillIDAssigner>());
   pipe0.name();
@@ -71,7 +71,7 @@ void noise_analyser(HitStream &stream, RunContext &ctx)
 
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
+  // pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<NoiseAnalyzer>());
   pipe.name();
@@ -105,7 +105,7 @@ void noise_correlation_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
+  // pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<CorrMap>()); // correlation map is very time-consuming; limits the number of frames to be analyzed
 
@@ -142,7 +142,7 @@ void sum1D_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
+  // pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<Sum1D>());
 
@@ -187,12 +187,12 @@ void resolution_2DMap0(HitStream &stream, RunContext &ctx)
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
   pipe.add(std::make_unique<SpillIDInput>());
-  pipe.add(std::make_unique<UnCalData>());
+  // pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<CommonModeSub>());
   pipe.add(std::make_unique<Clustering>());
   pipe.add(std::make_unique<CalData>());
   pipe.add(std::make_unique<Algo>("grarms"));
-  pipe.add(std::make_unique<PosAlign>());
+  // pipe.add(std::make_unique<PosAlign>());
   pipe.add(std::make_unique<ScanXY>());
 
   
@@ -231,12 +231,12 @@ void resolution_2DMap1(HitStream &stream, RunContext &ctx)
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
   pipe.add(std::make_unique<SpillIDInput>());
-  pipe.add(std::make_unique<UnCalData>());
+  // pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<CommonModeSub>());
   pipe.add(std::make_unique<Clustering>());
-  pipe.add(std::make_unique<CalData>());
+  // pipe.add(std::make_unique<CalData>());
   pipe.add(std::make_unique<Algo>("grarms"));
-  pipe.add(std::make_unique<PosAlign>());
+  // pipe.add(std::make_unique<PosAlign>());
   // pipe.add(std::make_unique<ScanXY>());
 
   pipe.add(std::make_unique<Pos2DMap>());
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
   RunContext ctx;
   ctx.run_number = std::stoi(argv[2]);
   ctx.input_file = filename;
-  ctx.nrBoards = 6;
+  ctx.nrBoards = 4;
   ctx.readout_rate = 10000; // 10 kHz
   ctx.max_frames = (max_frames == -1) ? stream.total_frames_in_file() : max_frames;
   ctx.noise_run = false; // for noise run, noise analyser will analyse all the frames
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
   spillID_analyser(stream, ctx);
   // noise_analyser(stream, ctx);
   // noise_correlation_analyser(stream, ctx);
-  // sum1D_analyser(stream, ctx);
+  sum1D_analyser(stream, ctx);
 
   resolution_2DMap0(stream, ctx);
   resolution_2DMap1(stream, ctx);

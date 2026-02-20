@@ -34,7 +34,7 @@ distribution providing the above dependencies.
 
 ## How to run
 
-There are two applications here. One under folder`cal_pre, and one `main`
+There are two applications here. One under folder`cal_pre`, and one `main`
 Each folder contains one GNU Makefile to build the code.
 
 For example, to run `main`:

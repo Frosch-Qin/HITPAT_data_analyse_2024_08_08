@@ -1,3 +1,6 @@
+#pragma once
+
+
 //**************************************************************FAST ACCURACY SEPARABLE FAS****************************************
 // FAS https://arxiv.org/pdf/1907.07241.pdf
 // N_iter = 1 , iterate once

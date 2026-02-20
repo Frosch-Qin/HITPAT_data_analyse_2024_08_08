@@ -1,3 +1,5 @@
+#pragma once
+
 // window is established by the cluster locating algorithm
 // the output position with the unit of 0.05mm
 template <class T>

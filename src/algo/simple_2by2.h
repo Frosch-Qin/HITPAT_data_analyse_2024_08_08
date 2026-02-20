@@ -1,3 +1,5 @@
+#pragma once
+
 //window is established by the cluster locating algorithm
 template <class T>
 void simple_2by2(T *p_frame_data, int boardNum, beamRecon *beam)

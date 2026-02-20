@@ -1,5 +1,6 @@
 // create a class for register
 // how to use this class see the test_reg() function
+#pragma once
 
 
 #include <gmp.h> // for big number

@@ -1,4 +1,4 @@
-
+#pragma once
 
 bool cluster_locate(Fullframe *p_frame_data,int boardNum , beamRecon *beam, int threshold=18, int cluster_size=4)
 {

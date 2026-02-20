@@ -42,6 +42,7 @@
 #include <TGraph2D.h>
 #include <TLatex.h>
 #include <TLegend.h>
+#include "TProfile2D.h"
 #include <queue>
 #include "hitreader.h" // provides Fullframe
 

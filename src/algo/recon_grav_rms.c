@@ -1,3 +1,5 @@
+#pragma once
+
 // recon_result: height_ob{}, mean_ob{},  sigma_ob{};
 // the precise version of recon_gravity_rms
 template <class T>
@@ -30,7 +32,7 @@ void recon_gravity_rms(T *p_frame_data, int boardNum, beamRecon *beam)
         MeanX = SumXY / SumY;
         if (MeanX < 0 || SumXY < 0 || SumY < 0 || MeanX > 409.6 ) //
         {
-            std::cout << "Warning: MeanX SumXY or SumY is negative, or MeanX is more than 13 bits setting to -1." << std::endl;
+            // std::cout << "Warning: MeanX SumXY or SumY is negative, or MeanX is more than 13 bits setting to -1." << std::endl;
             MeanX = -1;  // Set to 0 if negative
             Sigma0 = -1; // Set to -1 if no valid data
             beam->Position = MeanX;
@@ -41,7 +43,7 @@ void recon_gravity_rms(T *p_frame_data, int boardNum, beamRecon *beam)
     }
     else
     {
-        std::cout << "Warning: SumY is 0, setting MeanX to -1." << std::endl;
+        // std::cout << "Warning: SumY is 0, setting MeanX to -1." << std::endl;
         MeanX = -1;  // Set to -1 if no valid data
         Sigma0 = -1; // Set to -1 if no valid data
         beam->Position = MeanX;
@@ -61,7 +63,7 @@ void recon_gravity_rms(T *p_frame_data, int boardNum, beamRecon *beam)
     }
     else
     {
-        std::cout << "Warning: SumY is " << SumY <<" SumXY is " << SumXY << " or Sigma0 is " << Sigma0 << ", setting Sigma0 to -1." << std::endl;
+        //std::cout << "Warning: SumY is " << SumY <<" SumXY is " << SumXY << " or Sigma0 is " << Sigma0 << ", setting Sigma0 to -1." << std::endl;
         Sigma0 = -1; // Set to -1 if no valid data
     }
 

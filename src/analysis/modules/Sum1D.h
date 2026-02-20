@@ -21,6 +21,8 @@ public:
         {
             std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
         }
+
+        file_ = new TFile(Form("output/run%d_Sum1D.root", ctx.run_number), "RECREATE");
     }
 
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override
@@ -90,15 +92,14 @@ private:
     long num_signal = 0;
 
     TDirectory *dir_ = nullptr;
+    TFile *file_ = nullptr;
 
     void create_histograms(const RunContext &ctx)
     {
-
-        if (!ctx.rootfile)
-            return;
-        dir_ = ctx.rootfile->GetDirectory("Sum1D");
+       
+        dir_ = file_->GetDirectory("Sum1D");
         if (!dir_)
-            dir_ = ctx.rootfile->mkdir("Sum1D");
+            dir_ = file_->mkdir("Sum1D");
         dir_->cd();
 
         for (int i = 0; i < nrBoards; ++i)
@@ -123,10 +124,7 @@ private:
     void write_histograms(const RunContext &ctx)
     {
 
-        if (!ctx.rootfile)
-            return;
-
-        ctx.rootfile->cd();
+        file_->cd();
         dir_->cd();
 
         for (int i = 0; i < nrBoards; ++i)
@@ -166,5 +164,7 @@ private:
             signal_sub_pedestalA_graph[i]->Write();
             pedestalB_sub_pedestalA_graph[i]->Write();
         }
+
+        file_->Close();
     }
 };

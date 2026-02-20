@@ -1,3 +1,4 @@
+#pragma once
 
 // the system's namespace
 // include all system parameters

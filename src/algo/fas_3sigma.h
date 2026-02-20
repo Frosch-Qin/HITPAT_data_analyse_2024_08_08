@@ -1,3 +1,4 @@
+#pragma once
 
 template <class T>
 void fas_3sigma(T *p_frame_data, int boardNum, beamRecon *beam)

@@ -1,3 +1,7 @@
+#pragma once
+
+
+
 #include <iostream>
 #include <bitset>
 #include <cmath>

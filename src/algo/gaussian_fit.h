@@ -1,3 +1,5 @@
+#pragma once
+
 // the gaussian fitting for reconstructing peak, position and width
 // #define WINDOW_LENTH 40 //40 channels
 

@@ -1,4 +1,4 @@
-
+#pragma once
 template <class T>
 void caruana(T *p_frame_data, int boardNum, beamRecon *beam)
 {

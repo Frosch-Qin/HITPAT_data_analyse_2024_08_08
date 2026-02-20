@@ -1,3 +1,5 @@
+#pragma once
+
 template <class T>
 void guo(T *p_frame_data, int boardNum, beamRecon *beam)
 {

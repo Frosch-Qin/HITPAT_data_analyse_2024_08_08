@@ -1,6 +1,8 @@
 // recon_result: height_ob{}, mean_ob{},  sigma_ob{};
 // center of Gravity and rms
 // to get the bitsize of each REG, we need to store it in root file
+#pragma once
+
 #define Print_bitsize(x)                                                                 \
     // {                                                                                    \
     //     std::cout << #x << " = " << x.douval << " bitsize = " << x.bitsize << std::endl; \

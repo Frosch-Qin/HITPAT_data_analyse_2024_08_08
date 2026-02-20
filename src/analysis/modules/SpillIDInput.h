@@ -66,10 +66,10 @@ private:
     // run22 clsize = 4
     void get_spill_time(const RunContext &ctx)
     {
-        TFile *file = TFile::Open(Form("../output/SpillID/run%d_SpillID.root", ctx.run_number), "READ");
+        TFile *file = TFile::Open(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "READ");
         if (!file || !file->IsOpen())
         {
-            std::cerr << "Error opening file: " << Form("../../../output/SpillID/run%d_SpillID.root", ctx.run_number) << std::endl;
+            std::cerr << "Error opening file: " << Form("../../output/SpillID/run%d_SpillID.root", ctx.run_number) << std::endl;
             return;
         }
         TTree *tree = (TTree *)file->Get("spill_info_tree");
@@ -79,7 +79,7 @@ private:
         tree->SetBranchAddress("spill_start", &x);
         tree->SetBranchAddress("spill_end", &y);
 
-        std::cout << tree->GetEntries() << " spills read from beam_on_status.root file." << std::endl;
+        std::cout << tree->GetEntries() << Form(" spills read from run%d_SpillID.root file.", ctx.run_number) << std::endl;
 
         for (int i = 0; i < tree->GetEntries(); i++)
         {

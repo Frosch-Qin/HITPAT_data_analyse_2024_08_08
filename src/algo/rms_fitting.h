@@ -1,3 +1,5 @@
+#pragma once
+
 // recon_result: height_ob{}, mean_ob{},  sigma_ob{};
 // the precise version of recon_gravity_rms
 template <class T>

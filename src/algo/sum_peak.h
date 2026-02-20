@@ -1,5 +1,6 @@
 //the algorithm for calculate gaussian peak, position and width.
 //sum signal, find peak and do the division
+#pragma once
 
 template<typename T>
 void sum_peak_fpga(T* p_frame_data, int boardNum, beamRecon *beam){

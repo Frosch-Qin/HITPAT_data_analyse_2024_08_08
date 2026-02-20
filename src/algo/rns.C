@@ -1,3 +1,5 @@
+#pragma once
+
 //test 8 digits residue number system (RNS)
 //Xi= x mod Pi
 //P=(19,17,13,11,7,5,3,2)

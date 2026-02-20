@@ -17,7 +17,7 @@ public:
 
     void begin_run(const RunContext &ctx) override
     {
-        file_ = ctx.rootfile;
+        file_ = new TFile(Form("output/Noise/run%d_CorrMap.root", ctx.run_number), "RECREATE");
         if (!file_)
             return;
         dir_ = file_->GetDirectory("CorrMap");
@@ -40,7 +40,7 @@ public:
 
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override
     {
-        if (tags.BKG_SUB_ON && (tags.SpillID == -2 || is_noise_run) && frame_index < 20000)  //analyse at most 20000 frames
+        if (tags.BKG_SUB_ON && (tags.SpillID == -2 || is_noise_run) && frame_index < 20000) // analyse at most 20000 frames
         {
             for (int i = 0; i < nrBoards; i++)
             {
@@ -51,7 +51,7 @@ public:
         {
             for (int i = 0; i < nrBoards; i++)
             {
-                get_corr_map(false, i);  //get correlation map and write to .root
+                get_corr_map(false, i); // get correlation map and write to .root
             }
             file_saved = true;
         }
@@ -66,6 +66,8 @@ public:
                 get_corr_map(false, i);
             }
         }
+
+        file_->Close();
     }
 
 private:
@@ -156,7 +158,7 @@ private:
             }
         }
 
-        //set 2D map Z-axis range -1 to 1
+        // set 2D map Z-axis range -1 to 1
         channel_corr_map[board_id]->GetZaxis()->SetRangeUser(-1, 1);
     };
 
@@ -167,7 +169,7 @@ private:
         {
             for (int j = 0; j < 320; j++)
             {
-                channel_corr[board_id][i][j] = new TH2D(Form("channel_corr_board%d_%d_%d", board_id, i, j), Form("channel_corr_board%d_%d_%d", board_id, i, j), 201, -100.5, 100.5, 201, -100.5, 100.5); // for noise 
+                channel_corr[board_id][i][j] = new TH2D(Form("channel_corr_board%d_%d_%d", board_id, i, j), Form("channel_corr_board%d_%d_%d", board_id, i, j), 201, -100.5, 100.5, 201, -100.5, 100.5); // for noise
             }
         }
         channel_corr_map[board_id] = new TH2D(Form("channel_corr_map_board%d", board_id), Form("channel_corr_map_%d", board_id), 320, -0.5, 319.5, 320, -0.5, 319.5);

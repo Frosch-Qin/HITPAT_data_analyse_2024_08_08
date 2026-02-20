@@ -14,15 +14,12 @@ public:
 
     void begin_run(const RunContext &ctx) override
     {
-        if (!ctx.SpillIDfile)
-            return;
-        file_ = ctx.SpillIDfile;
+        file_ = new TFile(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (nrBoards > 6)
         {
             std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
         }
-
 
         readout_rate = ctx.readout_rate;
 
@@ -201,6 +198,7 @@ private:
         file_->cd();
         fillTree();
         spill_time_graph->Write();
+        file_->Close();
     }
 
     void createHistograms(double totaltime) // totaltime in seconds for the focusTime histogram
@@ -262,6 +260,6 @@ private:
     std::vector<double> spill_end_time;
 
     TGraph *spill_time_graph;
-    
+
     double readout_rate;
 };

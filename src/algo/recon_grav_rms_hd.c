@@ -1,3 +1,5 @@
+#pragma once
+
 // recon_result: height_ob{}, mean_ob{},  sigma_ob{};
 // #define Print_mpz(x)                                                                             \
 //     {                                                                                            \

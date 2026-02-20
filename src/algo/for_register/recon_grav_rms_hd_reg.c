@@ -1,4 +1,6 @@
 // recon_result: height_ob{}, mean_ob{},  sigma_ob{};
+#pragma once
+
 #define Print_bitsize(x) {std::cout << #x << " = " << x.douval << " bitsize = "<< x.bitsize <<std::endl;}
 template <class T>
 void recon_gravity_rms_hd_reg(T *p_frame_data, int boardNum, beamRecon *beam)

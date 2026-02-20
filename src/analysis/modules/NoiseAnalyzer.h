@@ -14,6 +14,7 @@ public:
     void begin_run(const RunContext &ctx) override
     {
 
+        file_ = new TFile(Form("output/Noise/run%d_Noise.root", ctx.run_number), "RECREATE");
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (nrBoards > 6)
         {
@@ -80,7 +81,7 @@ public:
 
     void end_run(const RunContext &ctx) override
     {
-        ctx.rootfile->cd();
+        file_->cd();
         if (!dir_)
             return;
         dir_->cd();
@@ -116,6 +117,7 @@ public:
             noise_frame_std_hist[i]->Write();
             noise_correlation[i]->Write();
         }
+        file_->Close();
     }
 
 private:
@@ -136,7 +138,7 @@ private:
 
     void createHistograms(const RunContext &ctx)
     {
-        file_ = ctx.rootfile;
+
         if (!file_)
             return;
         dir_ = file_->GetDirectory("NoiseAnalysis");

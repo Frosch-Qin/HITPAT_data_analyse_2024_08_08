@@ -419,7 +419,7 @@ void test_PeakScan(int run_number, bool projX, int stationID, int expected_peak_
 {
 
     // ---------------- input layer (ONLY ONCE) ----------------
-    TFile *f = TFile::Open(Form("output/run%d_ScanXY.root", run_number), "READ");
+    TFile *f = TFile::Open(Form("output2025/run%d_ScanXY.root", run_number), "READ");
     if (!f || f->IsZombie())
     {
         std::cerr << "Error: cannot open file.\n";
@@ -460,7 +460,7 @@ void test_PeakScan(int run_number, bool projX, int stationID, int expected_peak_
         line->Draw("same");
     }
 
-    c->SaveAs(Form("output/run%d_Peaks.png", run_number));
+    c->SaveAs(Form("output2025/run%d_Peaks.png", run_number));
 
     f->Close();
 }

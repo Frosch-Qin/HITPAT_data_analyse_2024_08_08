@@ -20,14 +20,16 @@ struct RunContext
   double readout_rate; // in Hz; normal setting is 10 kHz
 
   // Clustering setting for each board
-  int clustering_threshold[6] = {16, 16, 16, 16, 16, 16}; // up for 6 boards 2024 08 08 with common mode subtraction
+  // int clustering_threshold[6] = {16, 16, 16, 16, 16, 16}; // up for 6 boards 2024 08 08 with common mode subtraction
   // int clustering_threshold[6] = {30, 15, 15, 30, 30, 30}; // up for 6 boards 2024 08 08
 
-  // int clustering_threshold[6] = {30, 30, 30, 15, 30, 30}; // up for 6 boards 2025 05 03
+  int clustering_threshold[6] = {16, 16, 16, 16, 16, 16}; // up for 6 boards 2025 05 03
+  bool common_mode[6] = {true, true, true, false, false,true}; // common mode subtraction for 4 boards 2025 
+
 
   int clustering_size[6] = {4, 4, 4, 4, 4, 4}; // up for 6 boards
 
-  bool common_mode[6] = {true, false, false, true, true, true}; // common mode subtraction for 4 boards
+  // bool common_mode[6] = {true, false, false, true, true, true}; // common mode subtraction for 4 boards
 
   // FPGA Settings
   int FPGA_clustering_threshold[6] = {27, 13, 13, 29, 32, 29}; // up for 6 boards

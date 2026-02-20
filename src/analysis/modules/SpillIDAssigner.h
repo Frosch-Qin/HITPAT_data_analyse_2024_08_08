@@ -14,7 +14,7 @@ public:
 
     void begin_run(const RunContext &ctx) override
     {
-        file_ = new TFile(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (nrBoards > 6)
         {
@@ -61,12 +61,12 @@ private:
         std::vector<double> spill_start_time0;
         std::vector<double> spill_end_time0;
 
-        for (int i = 1; i < BeamOnTimeGraph_12->GetN(); i++)
+        for (int i = 1; i < BeamOnTimeGraph[3]->GetN(); i++)
         {
             double x, y;
             double x_last, y_last;
-            BeamOnTimeGraph_12->GetPoint(i, x, y);
-            BeamOnTimeGraph_12->GetPoint(i - 1, x_last, y_last);
+            BeamOnTimeGraph[3]->GetPoint(i, x, y);
+            BeamOnTimeGraph[3]->GetPoint(i - 1, x_last, y_last);
             if (y > 0 && y_last == 0)
             {
                 spill_start_time0.push_back(x);

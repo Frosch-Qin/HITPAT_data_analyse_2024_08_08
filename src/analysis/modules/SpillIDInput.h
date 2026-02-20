@@ -66,10 +66,10 @@ private:
     // run22 clsize = 4
     void get_spill_time(const RunContext &ctx)
     {
-        TFile *file = TFile::Open(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "READ");
+        TFile *file = TFile::Open(Form("output2025/SpillID/run%d_SpillID.root", ctx.run_number), "READ");
         if (!file || !file->IsOpen())
         {
-            std::cerr << "Error opening file: " << Form("../../output/SpillID/run%d_SpillID.root", ctx.run_number) << std::endl;
+            std::cerr << "Error opening file: " << Form("../../output2025/SpillID/run%d_SpillID.root", ctx.run_number) << std::endl;
             return;
         }
         TTree *tree = (TTree *)file->Get("spill_info_tree");

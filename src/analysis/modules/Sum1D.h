@@ -22,7 +22,7 @@ public:
             std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
         }
 
-        file_ = new TFile(Form("output/run%d_Sum1D.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_Sum1D.root", ctx.run_number), "RECREATE");
     }
 
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override

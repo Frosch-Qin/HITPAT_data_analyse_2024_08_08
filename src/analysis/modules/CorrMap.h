@@ -17,7 +17,7 @@ public:
 
     void begin_run(const RunContext &ctx) override
     {
-        file_ = new TFile(Form("output/Noise/run%d_CorrMap.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/Noise/run%d_CorrMap.root", ctx.run_number), "RECREATE");
         if (!file_)
             return;
         dir_ = file_->GetDirectory("CorrMap");

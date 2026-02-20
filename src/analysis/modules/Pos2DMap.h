@@ -17,7 +17,7 @@ public:
 
     void begin_run(const RunContext &ctx) override
     {
-        file_ = new TFile(Form("output/run%d_Pos2DMap.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_Pos2DMap.root", ctx.run_number), "RECREATE");
 
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (ctx.nrBoards > 6)
@@ -206,7 +206,7 @@ private:
 
     bool getBinEdges(const RunContext &ctx)
     {
-        TFile *binFile = TFile::Open(Form("output/run%d_ScanXY.root", ctx.run_number), "READ");
+        TFile *binFile = TFile::Open(Form("output2025/run%d_ScanXY.root", ctx.run_number), "READ");
         if (!binFile || binFile->IsZombie())
         {
             std::cerr << "Error: cannot open file to get bin edges.\n";

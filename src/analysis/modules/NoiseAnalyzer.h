@@ -14,7 +14,7 @@ public:
     void begin_run(const RunContext &ctx) override
     {
 
-        file_ = new TFile(Form("output/Noise/run%d_Noise.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/Noise/run%d_Noise.root", ctx.run_number), "RECREATE");
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (nrBoards > 6)
         {

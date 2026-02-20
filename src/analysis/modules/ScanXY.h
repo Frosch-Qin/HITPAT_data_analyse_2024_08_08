@@ -18,7 +18,7 @@ public:
     void begin_run(const RunContext &ctx) override
     {
 
-        file_ = new TFile(Form("output/run%d_ScanXY.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_ScanXY.root", ctx.run_number), "RECREATE");
         nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
         if (nrBoards > 6)
         {
@@ -91,7 +91,7 @@ private:
 
         for (int i = 0; i < nrBoards / 2; ++i)
         {
-            Pos2D[i] = new TH2D(Form("Pos2D_H%dV%d", i, i), Form("Pos2D_H%dV%d", i, i), 2560, -128, 128, 2560, -128, 128);
+            Pos2D[i] = new TH2D(Form("Pos2D_H%dV%d", i, i), Form("Pos2D_H%dV%d", i, i), 2560, 0, 256, 2560, 0, 256);
 
             Pos2D[i]->GetXaxis()->SetTitle(Form("H%d position [mm]", i));
             Pos2D[i]->GetYaxis()->SetTitle(Form("V%d position [mm]", i));

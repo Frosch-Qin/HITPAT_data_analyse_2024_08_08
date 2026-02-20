@@ -34,13 +34,12 @@ distribution providing the above dependencies.
 
 ## How to run
 
-There are two applications here. One under folder`cal_pre, and one under `app`
+There are two applications here. One under folder`cal_pre, and one `main`
 Each folder contains one GNU Makefile to build the code.
 
-For example, to run `app/main`:
+For example, to run `main`:
 
 ```bash
-cd app
 make clean; make
 ./main dataset_path runID
 ```
@@ -52,7 +51,7 @@ snakemake -r -j 4 maketestfile
 
 ## Folder structure
 
-The `app/main.cpp` file is the main application. Different analysis processes can be easily pipelined in `main.cpp`.
+The `main.cpp` file is the main application. Different analysis processes can be easily pipelined in `main.cpp`.
 
 - **`src/analysis`**  
   Contains different analysis processes.  

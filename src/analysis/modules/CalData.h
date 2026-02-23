@@ -54,7 +54,7 @@ private:
 
     void get_calfac()
     {
-        TFile *calFile = TFile::Open(Form("cal_pre/calibration_factor_run19/cal_run19.root"), "READ");
+        TFile *calFile = TFile::Open(Form("cal_pre/output/cal_run19.root"), "READ");
 
         if (!calFile || calFile->IsZombie())
         {

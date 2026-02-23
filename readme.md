@@ -70,4 +70,7 @@ The `cal_fac_testbeam` folder contains the calibration factors used in test beam
 The `cal_pre` folder contains the code for generating the calibration factors (where a value of 1 is represented by 8192).
 
 
+## Data Analyse Flow
+
+![Mind Flow](doc/data_analyse.drawio.png)
 

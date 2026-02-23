@@ -29,6 +29,7 @@ void spillID_analyser(HitStream &stream, RunContext &ctx)
   AnalysisPipeline<Fullframe> pipe0;
   pipe0.add(std::make_unique<BkgSub>());
   // pipe0.add(std::make_unique<UnCalData>());
+  pipe.add(std::make_unique<CommonModeSub>());
   pipe0.add(std::make_unique<Clustering>());
   pipe0.add(std::make_unique<SpillIDAssigner>());
   pipe0.name();

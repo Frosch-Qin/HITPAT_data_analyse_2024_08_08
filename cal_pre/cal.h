@@ -9,7 +9,34 @@
 // input is run name and the boundary of the beam signal(how many sigma from the fit for sumsignal_diff to the center)
 //  if no boundary is given, the default value is 1.5
 
-#include "../hitreader/analyser.h"
+#pragma once
+
+#include <string>
+#include <stdio.h>
+#include <fstream>
+#include <iostream>
+#include <utility>
+#include <TLine.h>
+#include <TH2.h>
+#include <TF1.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <math.h>
+#include <TF1.h>
+#include <TGraphErrors.h>
+#include <TVector.h>
+#include "TApplication.h"
+#include "TRint.h"
+#include "TSystem.h"
+#include "TMultiGraph.h"
+#include "TObject.h"
+#include <TGraph2D.h>
+#include <TLatex.h>
+#include <TLegend.h>
+
+#include "../plot/lhcbStyle.h"
 
 double *mean_std(TGraph *g, double left_border, double right_border)
 {
@@ -44,30 +71,35 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     lhcbStyle();
     double boundary_nr_sigma[2] = {left_nr_sigma, right_nr_sigma};
 
-    ofstream logfile;
-    logfile.open(Form("calibration_factor_linescanH/%s_cal_board%d.log", run_name, boardID));
+    std::ofstream logfile;
+    logfile.open(Form("output/%s_cal_board%d.log", run_name, boardID));
     TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 
     /*****************open and read the roof file************************************************************/
-    string rootFileName = Form("../sum_signal1d/rootfile/%s_4_sum1d.root", run_name);
+    std::string rootFileName = Form("../output/%s_Sum1D.root", run_name);
     TFile *rootFile = TFile::Open(rootFileName.c_str(), "READ");
 
     if (rootFile->IsOpen())
     {
-        std::cout << Form(" %s opened sucessfully", rootFileName.c_str()) << endl;
+        std::cout << Form(" %s opened sucessfully", rootFileName.c_str()) << std::endl;
     }
     else
     {
-        std::cout << Form("%s failed to open", rootFileName.c_str()) << endl;
+        std::cout << Form("%s failed to open", rootFileName.c_str()) << std::endl;
         return 1;
     }
 
-    TGraph *sumsignal_graph = (TGraph *)gDirectory->Get(Form("sum_all_pedestal0_sub_%d", boardID));
+    TGraph *sumsignal_graph = (TGraph *)rootFile->Get(Form("Sum1D/signal_sub_pedestalA_graph_%d", boardID));
+    if (!sumsignal_graph){
+        std::cerr << "Error: cannot find histogram \n";
+        rootFile->Close();
+        return 1; 
+    }
     sumsignal_graph->GetXaxis()->SetRangeUser(0, 319);
     sumsignal_graph->GetXaxis()->SetTitle("Channel ID");
     sumsignal_graph->GetYaxis()->SetTitle("avg amplitude");
 
-    TGraph *pedestal_uncertainty_graph = (TGraph *)gDirectory->Get(Form("pedestal1_sub_pedestal0_%d", boardID));
+    TGraph *pedestal_uncertainty_graph = (TGraph *)rootFile->Get(Form("Sum1D/pedestalB_sub_pedestalA_graph_%d", boardID));
 
     /*************************************for sum signal************************************************/
     // get the sumsignal
@@ -82,6 +114,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
         if (sumsignal[j] > max_sumsignal)
         {
             max_sumsignal = sumsignal[j];
+            // std::cout << " j " << max_sumsignal;
         }
     }
 
@@ -221,7 +254,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     calibration_factor_graph->GetYaxis()->SetTitle("calibration_factor");
     calibration_factor_graph->Draw("APL");
 
-    c1->SaveAs(Form("calibration_factor_%s_board%d.png", run_name, boardID));
+    c1->SaveAs(Form("output/calibration_factor_%s_board%d.png", run_name, boardID));
 
     // quantized the calibration factor, scale 1 to 8192
     unsigned short calibration_factor_quantized[nrChannels]{};
@@ -251,12 +284,12 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     calibration_factor_quantized_graph->GetYaxis()->SetTitle("calibration_factor_quantized");
     calibration_factor_quantized_graph->Draw("APL");
 
-    c1->SaveAs(Form("calibration_factor_quantized_%s_board%d.png", run_name, boardID));
+    c1->SaveAs(Form("output/calibration_factor_quantized_%s_board%d.png", run_name, boardID));
 
     // output the quantized calibration factor to txt files; one file for one board; each line for one channel
-    ofstream outfile;
+    std::ofstream outfile;
 
-    std::string filename = Form("calibration_factor_run19/board%d.txt", boardID);
+    std::string filename = Form("output/board%d.txt", boardID);
     outfile.open(filename);
     if (!outfile)
     {
@@ -265,7 +298,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     }
     for (int j = 0; j < nrChannels; j++)
     {
-        outfile << calibration_factor_quantized[j] << endl;
+        outfile << calibration_factor_quantized[j] << std::endl;
     }
     outfile.close();
 
@@ -362,8 +395,8 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     ll1->Draw("same");
     ll2->Draw("same");
 
-    c1->SaveAs(Form("sumsignal_calibrated_%s_board%d.png", run_name, boardID));
-    c1->SaveAs(Form("../plot/2024_08_measure/sumsignal_%s_board%d.png", run_name, boardID));
+    c1->SaveAs(Form("output/sumsignal_calibrated_%s_board%d.png", run_name, boardID));
+    // c1->SaveAs(Form("../plot/2024_08_measure/sumsignal_%s_board%d.png", run_name, boardID));
 
     //*********Draw the sum with the pleatue only************ */
     TCanvas *c2 = new TCanvas("c2", "c2", 800, 600);
@@ -373,7 +406,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     l1->Draw("same");
     l2->Draw("same");
     line1->Draw("same");
-    c2->SaveAs(Form("sumsignal_uncal_%s_board%d.png", run_name, boardID));
+    c2->SaveAs(Form("output/sumsignal_uncal_%s_board%d.png", run_name, boardID));
     // c2->SaveAs(Form("../plot/2024_08_measure/sumsignal_uncal_%s_board%d.png", run_name, boardID));
 
     pedestal_uncertainty_graph->SetLineWidth(2);
@@ -388,11 +421,11 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
 
     ll1->Draw("same");
     ll2->Draw("same");
-    c2->SaveAs(Form("pedestal_uncertainty_%s_board%d.png", run_name, boardID));
+    c2->SaveAs(Form("output/pedestal_uncertainty_%s_board%d.png", run_name, boardID));
     // c2->SaveAs(Form("../plot/2024_08_measure/pedestal_uncertainty_%s_board%d.png", run_name, boardID));
 
     // output the quartise calibration factor to txt files; one file for one board; each line for one channel
-    ofstream calfile;
+    std::ofstream calfile;
 
     std::string calfile_name = Form("calibration_factor_run19/board%d.txt", boardID);
     calfile.open(calfile_name);
@@ -403,7 +436,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     }
     for (int j = 0; j < nrChannels; j++)
     {
-        calfile << calibration_factor_quantized[j] << endl;
+        calfile << calibration_factor_quantized[j] << std::endl;
     }
     calfile.close();
 

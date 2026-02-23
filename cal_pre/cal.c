@@ -5,7 +5,7 @@
 cal generates board*.txt file for calibration factor for FPGA implementation 
 in the board*.txt file 2^13 = 8192 represents 1.0000
 
-make_cal_root(); combine the .txt into a rootfile
+make_cal_root(); combine the .txt into a rootfile 
 */
 
 
@@ -27,15 +27,15 @@ int main(int argc, char *argv[])
 
    // make_cal_root_file(run_name);
 
-   std::string run_name = "run19";
-   double left_sigma[6] = {1.5, 1.5, 1.5, 1.5, 1.5, 1};
-   double right_sigma[6] = {1.5, 1.5, 1.5, 1.5, 1, 1.5};
-   for (int boardID = 0; boardID < 6; boardID++)
+   const char* run_name[4] = {"run3", "run4", "run3", "run4"};
+   double left_sigma[4] = {1.5, 1.5, 1.5, 1.5};
+   double right_sigma[4] = {1.5, -0.5, 1.5, 2.5};
+   for (int boardID = 0; boardID < 4; boardID++)
    {
-       cal_board(run_name.c_str(), boardID, left_sigma[boardID], right_sigma[boardID]);
+       cal_board(run_name[boardID], boardID, left_sigma[boardID], right_sigma[boardID]);
    }
 
-   make_cal_root(6);
+   make_cal_root(4);
 
 //    cal_board("run5", 1, 1.1, 1.1);
 //    cal_board("run5", 3, 1.3, 1.6);

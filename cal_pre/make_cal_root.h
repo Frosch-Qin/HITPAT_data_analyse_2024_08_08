@@ -8,7 +8,7 @@ void make_cal_root(int nrBoards){
 
     for (int i = 0; i < nrBoards; i++)
     {
-        std::ifstream calfile(Form("output/board%d.txt",i));//+to_string(i)+".txt");
+        std::ifstream calfile(Form("output2025/board%d.txt",i));//+to_string(i)+".txt");
         if (!calfile.is_open())
         {
             std::cout << "Error: file open failed" << std::endl;
@@ -31,7 +31,7 @@ void make_cal_root(int nrBoards){
         }
     }
 
-    TFile *cal_file = new TFile("output/cal_run19.root", "RECREATE");
+    TFile *cal_file = new TFile("output2025/cal_run3.root", "RECREATE");
     for (int i = 0; i < nrBoards; i++)
     {
         cal_graph[i]->Write();

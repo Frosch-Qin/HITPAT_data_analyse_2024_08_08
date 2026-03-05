@@ -10,7 +10,6 @@
 #include "TCanvas.h"
 #include "TLine.h"
 
-
 #pragma once
 
 // To find the equally spaced local maxima in a TH1D histogram
@@ -32,6 +31,7 @@ struct JudgePeak
     int AddPeak = 0;
     std::vector<int> RemovePeakIndices; // gap indices i: between peak i and i+1
     std::vector<int> AddPeakIndices;    // gap indices i: between peak i and i+1
+    double RefDistance = 0.0;           // typical spacing (bin units)
 };
 
 static void sort_and_reorder(std::vector<Peak> &peaks)
@@ -48,8 +48,9 @@ static std::vector<Peak> find_peaks_in_range(TH1D *hist, int bin_lo, int bin_hi,
     std::vector<Peak> out;
     const int nb = hist->GetNbinsX();
 
-    bin_lo = std::max(bin_lo, 2);
-    bin_hi = std::min(bin_hi, nb - 1);
+    // Allow edges (1 and nb). Edge bins have only one neighbour.
+    bin_lo = std::max(bin_lo, 1);
+    bin_hi = std::min(bin_hi, nb);
     if (bin_lo > bin_hi)
         return out;
 
@@ -57,10 +58,29 @@ static std::vector<Peak> find_peaks_in_range(TH1D *hist, int bin_lo, int bin_hi,
     for (int i = bin_lo; i <= bin_hi; ++i)
     {
         double this_bin = hist->GetBinContent(i);
-        double prev_bin = hist->GetBinContent(i - 1);
-        double next_bin = hist->GetBinContent(i + 1);
+        if (this_bin <= threshold_abs)
+            continue;
 
-        if (this_bin > threshold_abs && this_bin >= prev_bin && this_bin >= next_bin)
+        // Local-maximum test with proper edge handling
+        bool is_peak = false;
+        if (i == 1)
+        {
+            double next_bin = hist->GetBinContent(i + 1);
+            is_peak = (this_bin >= next_bin);
+        }
+        else if (i == nb)
+        {
+            double prev_bin = hist->GetBinContent(i - 1);
+            is_peak = (this_bin >= prev_bin);
+        }
+        else
+        {
+            double prev_bin = hist->GetBinContent(i - 1);
+            double next_bin = hist->GetBinContent(i + 1);
+            is_peak = (this_bin >= prev_bin && this_bin >= next_bin);
+        }
+
+        if (is_peak)
         {
             Peak p;
             p.x = i;
@@ -75,7 +95,8 @@ static std::vector<Peak> find_peaks_in_range(TH1D *hist, int bin_lo, int bin_hi,
 
 std::vector<Peak> number_of_peaks_above_threshold(TH1D *hist, double threshold_abs)
 {
-    return find_peaks_in_range(hist, 2, hist->GetNbinsX() - 1, threshold_abs);
+    // Include possible peaks sitting at the histogram edges.
+    return find_peaks_in_range(hist, 1, hist->GetNbinsX(), threshold_abs);
 }
 
 // ---- robust spacing estimators ----
@@ -126,6 +147,7 @@ void judge_peaks(const std::vector<Peak> &peak_positions, JudgePeak &result)
     result.AddPeak = 0;
     result.RemovePeakIndices.clear();
     result.AddPeakIndices.clear();
+    result.RefDistance = 0.0;
 
     if (peak_positions.size() < 2)
     {
@@ -144,6 +166,7 @@ void judge_peaks(const std::vector<Peak> &peak_positions, JudgePeak &result)
 
     // 2) mode/majority (recommended for equally spaced many peaks)
     double ref = majority_distance_mode_rounded(distances);
+    result.RefDistance = ref;
 
     if (ref <= 0)
     {
@@ -170,9 +193,63 @@ void judge_peaks(const std::vector<Peak> &peak_positions, JudgePeak &result)
         }
     }
 
-    std::cout << "Reference distance (majority/mode) = " << ref
-              << ", Add=" << result.AddPeak
-              << ", Remove=" << result.RemovePeak << "\n";
+    // std::cout << "Reference distance (majority/mode) = " << ref
+    //           << ", Add=" << result.AddPeak
+    //           << ", Remove=" << result.RemovePeak << "\n";
+}
+
+static bool add_one_edge_missing_peak(std::vector<Peak> &peaks,
+                                      TH1D *hist,
+                                      bool left_edge,
+                                      double ref,
+                                      double threshold_abs_start,
+                                      double threshold_abs_min,
+                                      double threshold_step_abs)
+{
+    if (peaks.empty() || ref <= 0.0)
+        return false;
+
+    sort_and_reorder(peaks);
+    const int nb = hist->GetNbinsX();
+
+    int anchor = (int)std::lround(left_edge ? peaks.front().x : peaks.back().x);
+    int predicted = (int)std::lround(left_edge ? (anchor - ref) : (anchor + ref));
+
+    // Search in a window around the predicted edge-peak location.
+    const int halfw = std::max(2, (int)std::lround(0.9 * ref));
+    int lo = predicted - halfw;
+    int hi = predicted + halfw;
+
+    if (left_edge)
+    {
+        lo = std::max(1, lo);
+        hi = std::min(anchor - 1, hi);
+    }
+    else
+    {
+        lo = std::max(anchor + 1, lo);
+        hi = std::min(nb, hi);
+    }
+
+    if (lo > hi)
+        return false;
+
+    for (double thr = threshold_abs_start; thr >= threshold_abs_min; thr -= threshold_step_abs)
+    {
+        auto cand = find_peaks_in_range(hist, lo, hi, thr);
+        if (!cand.empty())
+        {
+            auto best_it = std::max_element(
+                cand.begin(), cand.end(),
+                [](const Peak &a, const Peak &b)
+                { return a.y < b.y; });
+
+            peaks.push_back(*best_it);
+            sort_and_reorder(peaks);
+            return true;
+        }
+    }
+    return false;
 }
 
 static bool remove_one_close_pair(std::vector<Peak> &peaks, int remove_index)
@@ -187,9 +264,9 @@ static bool remove_one_close_pair(std::vector<Peak> &peaks, int remove_index)
     int i = remove_index;
     size_t idx_remove = (peaks[i].y < peaks[i + 1].y) ? (size_t)i : (size_t)(i + 1);
 
-    std::cout << "Removing close peak at x=" << peaks[idx_remove].x
-              << " y=" << peaks[idx_remove].y
-              << " (gap index=" << remove_index << ")\n";
+    // std::cout << "Removing close peak at x=" << peaks[idx_remove].x
+    //           << " y=" << peaks[idx_remove].y
+    //           << " (gap index=" << remove_index << ")\n";
 
     peaks.erase(peaks.begin() + idx_remove);
     sort_and_reorder(peaks);
@@ -213,9 +290,9 @@ static bool add_one_missing_peak(std::vector<Peak> &peaks,
     int left = (int)std::round(peaks[add_index].x);
     int right = (int)std::round(peaks[add_index + 1].x);
 
-    std::cout << "Gap too wide: " << (right - left)
-              << " (between x=" << peaks[add_index].x
-              << " and " << peaks[add_index + 1].x << ")\n";
+    // std::cout << "Gap too wide: " << (right - left)
+    //           << " (between x=" << peaks[add_index].x
+    //           << " and " << peaks[add_index + 1].x << ")\n";
 
     for (double thr = threshold_abs_start; thr >= threshold_abs_min; thr -= threshold_step_abs)
     {
@@ -229,9 +306,9 @@ static bool add_one_missing_peak(std::vector<Peak> &peaks,
 
             Peak best = *best_it;
 
-            std::cout << "  Found missing peak at x=" << best.x
-                      << " y=" << best.y
-                      << " with thr=" << thr << "\n";
+            // std::cout << "  Found missing peak at x=" << best.x
+            //           << " y=" << best.y
+            //           << " with thr=" << thr << "\n";
 
             peaks.push_back(best);
             sort_and_reorder(peaks);
@@ -276,6 +353,29 @@ static void adjust_peaks(std::vector<Peak> &peaks, TH1D *hist, double max_y, dou
             int idx = res.AddPeakIndices.front();
             if (add_one_missing_peak(peaks, hist, idx, thr_start, thr_min, thr_step))
                 changed = true;
+        }
+
+        // NEW: recover missing peaks near the histogram edges
+        if (!changed && res.RefDistance > 0.0 && peaks.size() >= 2)
+        {
+            const double far_factor = 1.3;
+            const int nb = hist->GetNbinsX();
+
+            int first = (int)std::lround(peaks.front().x);
+            int last = (int)std::lround(peaks.back().x);
+
+            double left_gap = (double)(first - 1);
+            double right_gap = (double)(nb - last);
+
+            double thr_start = base_threshold_frac * max_y;
+            double thr_min = 0.05 * max_y;
+            double thr_step = 0.01 * max_y;
+
+            if (left_gap > far_factor * res.RefDistance)
+                changed = add_one_edge_missing_peak(peaks, hist, true, res.RefDistance, thr_start, thr_min, thr_step);
+
+            if (!changed && right_gap > far_factor * res.RefDistance)
+                changed = add_one_edge_missing_peak(peaks, hist, false, res.RefDistance, thr_start, thr_min, thr_step);
         }
 
         if (!changed)
@@ -350,9 +450,9 @@ int PeakScan(TH1D *h1, std::vector<Peak> &best_peaks, int expected=70)
         std::vector<Peak> peaks = run_once(h1, expected, thr_frac);
 
         int found = (int)peaks.size();
-        std::cout << "[outer " << it << "] expected=" << expected
-                  << " found=" << found
-                  << " threshold_frac=" << thr_frac << "\n";
+        // std::cout << "[outer " << it << "] expected=" << expected
+        //           << " found=" << found
+        //           << " threshold_frac=" << thr_frac << "\n";
 
         best_peaks = std::move(peaks);
         best_thr = thr_frac;
@@ -368,11 +468,10 @@ int PeakScan(TH1D *h1, std::vector<Peak> &best_peaks, int expected=70)
 
     sort_and_reorder(best_peaks);
 
-
     return 0;
 }
 
-void convertPeaksToBinEdges(const std::vector<Peak> &peaks,
+void convertPeaksToBinEdges(const std::vector<double> &peaks,
                             std::vector<double> &binEdges)
 {
     binEdges.clear();
@@ -384,40 +483,33 @@ void convertPeaksToBinEdges(const std::vector<Peak> &peaks,
     if (N == 1)
     {
         // Arbitrary small symmetric region
-        binEdges.push_back(peaks[0].x - 0.5);
-        binEdges.push_back(peaks[0].x + 0.5);
+        binEdges.push_back(peaks[0] - 0.5);
+        binEdges.push_back(peaks[0] + 0.5);
         return;
     }
 
-    // Make sure peaks are sorted (important!)
-    // (Assumes you already call sort_and_reorder before)
-    // If unsure, you can uncomment:
-    // std::vector<Peak> sorted = peaks;
-    // sort_and_reorder(sorted);
-
     // ---------- first boundary ----------
-    double first = peaks[0].x
-                 - 0.5 * (peaks[1].x - peaks[0].x);
+    double first = peaks[0]
+                 - 0.5 * (peaks[1] - peaks[0]);
 
     binEdges.push_back(first);
 
     // ---------- internal boundaries ----------
     for (size_t i = 0; i < N - 1; ++i)
     {
-        double mid = 0.5 * (peaks[i].x + peaks[i+1].x);
+        double mid = 0.5 * (peaks[i] + peaks[i+1]);
         binEdges.push_back(mid);
     }
 
     // ---------- last boundary ----------
-    double last = peaks[N-1].x
-                + 0.5 * (peaks[N-1].x - peaks[N-2].x);
+    double last = peaks[N-1]
+                + 0.5 * (peaks[N-1] - peaks[N-2]);
 
     binEdges.push_back(last);
 }
 
 void test_PeakScan(int run_number, bool projX, int stationID, int expected_peak_count = 70)
 {
-
     // ---------------- input layer (ONLY ONCE) ----------------
     TFile *f = TFile::Open(Form("output/run%d_ScanXY.root", run_number), "READ");
     if (!f || f->IsZombie())

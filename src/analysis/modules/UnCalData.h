@@ -12,14 +12,9 @@ public:
         return "UnCalData";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
-
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
 
         FPGA_calibrated = ctx.FPGA_calibrated;
         if (FPGA_calibrated)
@@ -62,7 +57,6 @@ private:
 
     double uncalFac[6][320] = {0}; // 6 boards, 320 channels
 
-    int nrBoards = 6;
 
     void get_uncalfac()
     {

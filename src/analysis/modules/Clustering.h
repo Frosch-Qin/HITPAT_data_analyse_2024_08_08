@@ -15,13 +15,9 @@ public:
         return "Clustering";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
 
         for (int i = 0; i < nrBoards; ++i)
         {
@@ -50,5 +46,4 @@ public:
 private:
     int clustering_threshold[6];
     int clustering_size[6];
-    int nrBoards = 6;
 };

@@ -12,14 +12,10 @@ public:
         return "SpillIDAssigner";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
         file_ = new TFile(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
 
         readout_rate = ctx.readout_rate;
 
@@ -239,7 +235,6 @@ private:
         spill_time_graph->GetYaxis()->SetTitle("Spill Status");
     }
 
-    int nrBoards = 6;
 
     TFile *file_;
     TTree *tree;

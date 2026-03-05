@@ -11,15 +11,11 @@ public:
         return "NoiseAnalyzer";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
 
         file_ = new TFile(Form("output/Noise/run%d_Noise.root", ctx.run_number), "RECREATE");
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
 
         is_noise_run = ctx.noise_run;
         if (is_noise_run)
@@ -121,8 +117,6 @@ public:
     }
 
 private:
-    int nrBoards = 6;
-
     TFile *file_ = nullptr;
     TDirectory *dir_ = nullptr;
     bool is_noise_run = false;

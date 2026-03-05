@@ -14,13 +14,9 @@ public:
         return algo_name;
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
 
         define_algorithmMap();
     }
@@ -62,5 +58,4 @@ private:
         algorithmMap["grarms"] = recon_gravity_rms<Fullframe>;
     }
 
-    int nrBoards;
 };

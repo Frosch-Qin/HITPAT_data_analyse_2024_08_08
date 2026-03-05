@@ -13,16 +13,10 @@ public:
         return "PosAlign";
     }
 
-    void begin_run(const RunContext &ctx) override
-    {
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
-        }
+protected:
+    void on_begin_run(const RunContext &ctx) override;
 
-    void process( Fullframe &frame, long frame_index,  FrameTags &tags) override
+    void process(Fullframe &frame, long frame_index, FrameTags &tags) override
     {
         // Position alignment logic goes here
         for (int i = 0; i < nrBoards; ++i)
@@ -31,7 +25,7 @@ public:
             {
                 continue; // Skip processing if no cluster is found
             }
-            tags.boardTags[i].Position = tags.boardTags[i].Position * slope_scaled[i] + intercept_scaled[i];
+            tags.boardTags[i].Position = tags.boardTags[i].Position * slope_scaled[i] + intercept_scaled[i] - offset_origin;
         }
     }
 
@@ -40,9 +34,54 @@ public:
     }
 
 private:
-    int nrBoards = 6;
-
-    // values from the alignment run17,18,19 alignment/align4.C
-    double intercept_scaled[6] = {129.79469, 133.77857, 128.53562, 130.49730, 124.82089, 128.73066};
-    double slope_scaled[6] = {-1.0132711, -1.0135994, -1.0000000, -1.0000000, -0.98736398, -0.98927401};
+    double intercept_scaled[6] = {0, 0, 0, 0, 0, 0};
+    double slope_scaled[6] = {1, 1, 1, 1, 1, 1};
+    const double offset_origin = 128.4; // 128.4 mm set the origin of mm coordinate in the middle of the 320 channels
+    void readIn_align(const RunContext &ctx);
 };
+
+void PosAlign::on_begin_run(const RunContext &ctx)
+{
+
+    readIn_align(ctx);
+}
+
+void PosAlign::readIn_align(const RunContext &ctx)
+{
+    TFile *file = TFile::Open(Form("output/%s_Pos1D.root", ctx.ALIGN_runname), "READ");
+    if (!file)
+    {
+        std::cout << Form("output/%s_Pos1D.root does not exist ", ctx.ALIGN_runname) << std::endl;
+    }
+
+    TF1 *H_Fit[3]{};
+    TF1 *V_Fit[3]{};
+    for (int i = 0; i < nrBoards / 2; i++)
+    {
+        H_Fit[i] = (TF1 *)file->Get(Form("Pos1D/H%d_Fit", i));
+        V_Fit[i] = (TF1 *)file->Get(Form("Pos1D/V%d_Fit", i));
+
+        if (!H_Fit[i])
+        {
+            std::cout << " can not find the TF1 fit " << std::endl;
+            return;
+        }
+
+        if (i != 1) // H1 is the reference
+        {
+            intercept_scaled[ctx.H_boardID[i]] = H_Fit[i]->GetParameter(0);
+            slope_scaled[ctx.H_boardID[i]] = H_Fit[i]->GetParameter(1);
+        }
+        if (i != 1) // H1 is the reference
+        {
+            intercept_scaled[ctx.V_boardID[i]] = V_Fit[i]->GetParameter(0);
+            slope_scaled[ctx.V_boardID[i]] = V_Fit[i]->GetParameter(1);
+        }
+    }
+
+    for (int i = 0; i < 6; i++)
+    {
+        std::cout << "alignment factor: " << intercept_scaled[i] << " " << slope_scaled[i] << std::endl;
+    }
+    file->Close();
+}

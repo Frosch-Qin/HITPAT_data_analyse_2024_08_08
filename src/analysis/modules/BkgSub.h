@@ -14,7 +14,8 @@ public:
         return "BkgSub";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
         
     }

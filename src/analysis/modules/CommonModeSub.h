@@ -14,14 +14,14 @@ public:
         return "CommonModeSub";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
 
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
+                //nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
+        //if (ctx.nrBoards > 6)
+          //  std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6.\n";
+
         for (int i = 0; i < nrBoards; ++i)
         {
             common_mode[i] = ctx.common_mode[i];
@@ -51,7 +51,6 @@ public:
 private:
 
 
-    int nrBoards = 6;
     bool common_mode[6] = {false};
 
     

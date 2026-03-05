@@ -16,7 +16,7 @@ public:
     return "FrameTagger";
   }
 
-  void begin_run(const RunContext& /*ctx*/) override {
+  void on_begin_run(const RunContext& /*ctx*/) override {
     // nothing needed here for simple threshold tagging
   }
 

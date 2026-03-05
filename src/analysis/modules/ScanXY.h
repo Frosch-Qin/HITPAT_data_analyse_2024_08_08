@@ -15,20 +15,12 @@ public:
         return "ScanXY";
     }
 
-    void begin_run(const RunContext &ctx) override
+protected:
+    void on_begin_run(const RunContext &ctx) override
     {
 
         file_ = new TFile(Form("output2025/run%d_ScanXY.root", ctx.run_number), "RECREATE");
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
-        for (int i = 0; i < nrBoards / 2; ++i)
-        {
-            H_boardID[i] = ctx.H_boardID[i];
-            V_boardID[i] = ctx.V_boardID[i];
-        }
+
         createHistograms(ctx);
     }
 
@@ -65,52 +57,36 @@ public:
                 }
                 Pos2D[i]->Write();
             }
+            file_->Close();
         }
-        file_->Close();
     }
 
 private:
     TFile *file_ = nullptr;
     TDirectory *dir_ = nullptr;
 
-    int nrBoards = 6;
-    int V_boardID[3];
-    int H_boardID[3];
+    TH2D *Pos2D[3] = {nullptr, nullptr, nullptr}; // prepare for 3 stations
 
-    TH2D *Pos2D[3]; // prepare for 3 stations
+    void createHistograms(const RunContext &ctx);
 
-    void createHistograms(const RunContext &ctx)
-    {
-
-        if (!file_)
-            return;
-        dir_ = file_->GetDirectory("ScanXY");
-        if (!dir_)
-            dir_ = file_->mkdir("ScanXY");
-        dir_->cd();
-
-        for (int i = 0; i < nrBoards / 2; ++i)
-        {
-            Pos2D[i] = new TH2D(Form("Pos2D_H%dV%d", i, i), Form("Pos2D_H%dV%d", i, i), 2560, 0, 256, 2560, 0, 256);
-
-            Pos2D[i]->GetXaxis()->SetTitle(Form("H%d position [mm]", i));
-            Pos2D[i]->GetYaxis()->SetTitle(Form("V%d position [mm]", i));
-        }
-    }
-
-    // return the scan boundaries
-    void findpeaks(TH1D *hist, int peakNum)
-    {
-        // find the first peak and last peak
-        int firstPeak = hist->FindFirstBinAbove(10);
-        int lastPeak = hist->FindLastBinAbove(10);
-        int estimate_x_pitch = (lastPeak - firstPeak) / (peakNum - 1);
-
-        //go through the peak one by one to get their positions
-
-        
-
-
-        // Implement peak finding algorithm here
-    }
 };
+// inline: later it may show up in multiple translation units.
+inline void ScanXY::createHistograms(const RunContext &ctx)
+{
+    if (!file_)
+        return;
+   
+    dir_ = file_->GetDirectory("ScanXY");
+    if (!dir_)
+        dir_ = file_->mkdir("ScanXY");
+
+    dir_->cd();
+
+    for (int i = 0; i < nrBoards / 2; ++i)
+    {
+        Pos2D[i] = new TH2D(Form("Pos2D_H%dV%d", i, i), Form("Pos2D_H%dV%d", i, i), 2560, -128, 128, 2560, -128, 128);
+
+        Pos2D[i]->GetXaxis()->SetTitle(Form("H%d position [mm]", i));
+        Pos2D[i]->GetYaxis()->SetTitle(Form("V%d position [mm]", i));
+    }
+}

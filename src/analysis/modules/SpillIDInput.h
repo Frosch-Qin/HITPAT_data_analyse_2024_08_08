@@ -13,7 +13,8 @@ public:
         return "SpillIDInput";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
         get_spill_time(ctx);
         readout_rate = ctx.readout_rate;

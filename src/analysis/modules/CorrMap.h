@@ -15,7 +15,8 @@ public:
         return "CorrMap";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
         file_ = new TFile(Form("output2025/Noise/run%d_CorrMap.root", ctx.run_number), "RECREATE");
         if (!file_)
@@ -27,11 +28,6 @@ public:
 
         is_noise_run = ctx.noise_run;
 
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
         for (int i = 0; i < nrBoards; i++)
         {
             create2dHistograms(ctx, i);
@@ -71,7 +67,6 @@ public:
     }
 
 private:
-    int nrBoards = 6;
     TDirectory *dir_ = nullptr;
     TFile *file_ = nullptr;
 

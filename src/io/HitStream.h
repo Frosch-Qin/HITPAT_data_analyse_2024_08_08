@@ -13,6 +13,7 @@
 #include <utility>
 #include <TLine.h>
 #include <TH2.h>
+#include <TH3.h>
 #include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>

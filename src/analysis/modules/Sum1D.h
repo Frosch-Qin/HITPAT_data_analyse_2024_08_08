@@ -14,14 +14,9 @@ public:
         return "Sum1D";
     }
 
-    void begin_run(const RunContext &ctx) override
+    protected:
+    void on_begin_run(const RunContext &ctx) override
     {
-        nrBoards = ctx.nrBoards > 6 ? 6 : ctx.nrBoards;
-        if (nrBoards > 6)
-        {
-            std::cerr << "Warning: nrBoards in RunContext is greater than 6, limiting to 6." << std::endl;
-        }
-
         file_ = new TFile(Form("output2025/run%d_Sum1D.root", ctx.run_number), "RECREATE");
     }
 
@@ -74,7 +69,7 @@ public:
     }
 
 private:
-    int nrBoards = 6;
+
     double pedestalA[6][320]{};
     double pedestalB[6][320]{};
     double signal[6][320]{};

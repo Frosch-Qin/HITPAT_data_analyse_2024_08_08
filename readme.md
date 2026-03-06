@@ -74,3 +74,6 @@ The `cal_pre` folder contains the code for generating the calibration factors (w
 
 ![Mind Flow](doc/data_analyse.drawio.png)
 
+![Mind Flow1](doc/data_analyse_2DMap.drawio.png)
+
+

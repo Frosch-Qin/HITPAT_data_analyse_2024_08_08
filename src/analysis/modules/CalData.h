@@ -19,7 +19,7 @@ public:
     void on_begin_run(const RunContext &ctx) override
     {
 
-        get_calfac();
+        get_calfac(ctx);
 
         
     }
@@ -46,9 +46,9 @@ private:
     double calFac[6][320] = {0}; // 6 boards, 320 channels
 
 
-    void get_calfac()
+    void get_calfac(const RunContext &ctx)
     {
-        TFile *calFile = TFile::Open(Form("cal_pre/output2025/cal_run3.root"), "READ");
+        TFile *calFile = TFile::Open(Form("cal_pre/output2025/cal_%s.root", ctx.CAL_runname), "READ");
 
         if (!calFile || calFile->IsZombie())
         {

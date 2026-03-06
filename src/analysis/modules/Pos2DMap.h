@@ -1,4 +1,4 @@
-// Pos2DMap.h  (patched)
+// Pos2DMap.h
 
 #pragma once
 
@@ -8,7 +8,7 @@
 
 #include "../IAnalyzer.h"
 #include "../FrameTags.h"
-#include "ScanBin.C" // PeakScan + convertPeaksToBinEdges
+#include "ScanBin.C"
 
 class Pos2DMap : public IAnalyzer<Fullframe>
 {
@@ -24,6 +24,12 @@ protected:
         if (!getBinEdges(ctx))
         {
             std::cerr << "Pos2DMap: getBinEdges failed -> skip creating histograms for this run.\n";
+            if (file_)
+            {
+                file_->Close();
+                delete file_;
+                file_ = nullptr;
+            }
             return;
         }
 
@@ -42,14 +48,16 @@ private:
 
     int nXbins = 0;
     int nYbins = 0;
+
     const int nZbins = 1000;
-    const double Zbin_leftedge = -10;
-    const double Zbin_rightedge = 10;
+    const double Zbin_leftedge = -10.0;
+    const double Zbin_rightedge = 10.0;
+
     std::vector<double> HbinEdges;
     std::vector<double> VbinEdges;
     std::vector<double> ZbinEdges;
 
-    const double offset_origin = 128.4; // 128.4 mm set the origin of mm coordinate in the middle of the 320 channels
+    const double offset_origin = 128.4;
 
     TH2D *V_PosBias[2] = {nullptr, nullptr};
     TH2D *H_PosBias[2] = {nullptr, nullptr};
@@ -65,8 +73,10 @@ private:
         if (e.size() < 2)
             return false;
         for (size_t i = 0; i + 1 < e.size(); ++i)
+        {
             if (!(e[i] < e[i + 1]))
                 return false;
+        }
         return true;
     }
 
@@ -75,6 +85,9 @@ private:
 
     void convertTH3DtoMeanSigma(const TH3D *h3, TH2D *hMean, TH2D *hSigma)
     {
+        if (!h3 || !hMean || !hSigma)
+            return;
+
         int nx = h3->GetNbinsX();
         int ny = h3->GetNbinsY();
 
@@ -82,7 +95,11 @@ private:
         {
             for (int iy = 1; iy <= ny; ++iy)
             {
-                TH1D *hz = h3->ProjectionZ("hz_tmp", ix, ix, iy, iy);
+                TH1D *hz = h3->ProjectionZ(Form("hz_tmp_%d_%d", ix, iy), ix, ix, iy, iy);
+                if (!hz)
+                    continue;
+
+                hz->SetDirectory(nullptr);
 
                 if (hz->GetEntries() > 10)
                 {
@@ -104,22 +121,29 @@ private:
 
 inline void Pos2DMap::process(Fullframe &frame, long frame_index, FrameTags &tags)
 {
+    (void)frame;
+    (void)frame_index;
 
     if (!histReady_)
         return;
 
+    if (tags.SpillID < 0)
+        return;
+
+    const int refH = H_boardID[1]; // here: H1 -> board 3
+    const int refV = V_boardID[1]; // here: V1 -> board 2
+
+    const double x = tags.boardTags[refH].Position;
+    const double y = tags.boardTags[refV].Position;
+
     for (int i = 0; i < nrBoards / 2 - 1; ++i)
     {
-        if (tags.SpillID < 0)
-            continue;
-
         if (!H_3D[i] || !V_3D[i])
             continue;
 
-        double x = tags.boardTags[H_boardID[1]].Position;
-        double y = tags.boardTags[V_boardID[1]].Position;
-        double Hdiff = tags.boardTags[H_boardID[i + 1]].Position - tags.boardTags[H_boardID[i]].Position;
-        double Vdiff = tags.boardTags[V_boardID[i + 1]].Position - tags.boardTags[V_boardID[i]].Position;
+        const double Hdiff = tags.boardTags[H_boardID[i + 1]].Position - tags.boardTags[H_boardID[i]].Position;
+
+        const double Vdiff = tags.boardTags[V_boardID[i + 1]].Position - tags.boardTags[V_boardID[i]].Position;
 
         H_3D[i]->Fill(x, y, Hdiff);
         V_3D[i]->Fill(x, y, Vdiff);
@@ -136,51 +160,64 @@ inline void Pos2DMap::createHistograms(const RunContext &ctx)
         dir_ = file_->mkdir("Pos2DMap");
     dir_->cd();
 
+    ZbinEdges.clear();
     ZbinEdges.reserve(nZbins + 1);
-    for (int i = 0; i <= nZbins; i++)
+    for (int i = 0; i <= nZbins; ++i)
     {
-        ZbinEdges.push_back(Zbin_leftedge + (Zbin_rightedge - Zbin_leftedge) / nZbins * i);
+        ZbinEdges.push_back(Zbin_leftedge + (Zbin_rightedge - Zbin_leftedge) * i / nZbins);
     }
+
+    const char *xref = ctx.BoardName[H_boardID[1]]; // "H1"
+    const char *yref = ctx.BoardName[V_boardID[1]]; // "V1"
+
     for (int i = 0; i < nrBoards / 2 - 1; ++i)
     {
-        V_3D[i] = new TH3D(Form("V_3D_V%dV%d", i, i + 1),
-                           Form("V_3D_V%dV%d", i, i + 1),
-                           nXbins, HbinEdges.data(),
-                           nYbins, VbinEdges.data(), nZbins, ZbinEdges.data());
-        H_3D[i] = new TH3D(Form("H_3D_H%dH%d", i, i + 1),
-                           Form("H_3D_H%dH%d", i, i + 1),
-                           nXbins, HbinEdges.data(),
-                           nYbins, VbinEdges.data(), nZbins, ZbinEdges.data());
+        const char *hA = ctx.BoardName[H_boardID[i]];
+        const char *hB = ctx.BoardName[H_boardID[i + 1]];
+        const char *vA = ctx.BoardName[V_boardID[i]];
+        const char *vB = ctx.BoardName[V_boardID[i + 1]];
 
-        V_PosBias[i] = new TH2D(Form("V_PosBias_V%dV%d", i, i + 1),
-                                Form("V_PosBias_V%dV%d", i, i + 1),
+        V_3D[i] = new TH3D(Form("V_3D_%s_%s", vA, vB),
+                           Form("V_3D_%s_%s", vA, vB),
+                           nXbins, HbinEdges.data(),
+                           nYbins, VbinEdges.data(),
+                           nZbins, ZbinEdges.data());
+
+        H_3D[i] = new TH3D(Form("H_3D_%s_%s", hA, hB),
+                           Form("H_3D_%s_%s", hA, hB),
+                           nXbins, HbinEdges.data(),
+                           nYbins, VbinEdges.data(),
+                           nZbins, ZbinEdges.data());
+
+        V_PosBias[i] = new TH2D(Form("V_PosBias_%s_%s", vA, vB),
+                                Form("V_PosBias_%s_%s", vA, vB),
                                 nXbins, HbinEdges.data(),
                                 nYbins, VbinEdges.data());
 
-        H_PosBias[i] = new TH2D(Form("H_PosBias_H%dH%d", i, i + 1),
-                                Form("H_PosBias_H%dH%d", i, i + 1),
+        H_PosBias[i] = new TH2D(Form("H_PosBias_%s_%s", hA, hB),
+                                Form("H_PosBias_%s_%s", hA, hB),
                                 nXbins, HbinEdges.data(),
                                 nYbins, VbinEdges.data());
 
-        V_PosRes[i] = new TH2D(Form("V_PosRes_V%dV%d", i, i + 1),
-                               Form("V_PosRes_V%dV%d", i, i + 1),
+        V_PosRes[i] = new TH2D(Form("V_PosRes_%s_%s", vA, vB),
+                               Form("V_PosRes_%s_%s", vA, vB),
                                nXbins, HbinEdges.data(),
                                nYbins, VbinEdges.data());
 
-        H_PosRes[i] = new TH2D(Form("H_PosRes_H%dH%d", i, i + 1),
-                               Form("H_PosRes_H%dH%d", i, i + 1),
+        H_PosRes[i] = new TH2D(Form("H_PosRes_%s_%s", hA, hB),
+                               Form("H_PosRes_%s_%s", hA, hB),
                                nXbins, HbinEdges.data(),
                                nYbins, VbinEdges.data());
 
-        H_PosBias[i]->GetXaxis()->SetTitle("H1 position [mm]");
-        H_PosBias[i]->GetYaxis()->SetTitle("V1 position [mm]");
-        V_PosBias[i]->GetXaxis()->SetTitle("H1 position [mm]");
-        V_PosBias[i]->GetYaxis()->SetTitle("V1 position [mm]");
+        H_PosBias[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
+        H_PosBias[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        V_PosBias[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
+        V_PosBias[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
 
-        H_PosRes[i]->GetXaxis()->SetTitle("H1 position [mm]");
-        H_PosRes[i]->GetYaxis()->SetTitle("V1 position [mm]");
-        V_PosRes[i]->GetXaxis()->SetTitle("H1 position [mm]");
-        V_PosRes[i]->GetYaxis()->SetTitle("V1 position [mm]");
+        H_PosRes[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
+        H_PosRes[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        V_PosRes[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
+        V_PosRes[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
     }
 }
 
@@ -195,36 +232,42 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
 
     for (int i = 0; i < nrBoards / 2 - 1; ++i)
     {
+        if (!V_3D[i] || !H_3D[i] || !V_PosBias[i] || !V_PosRes[i] || !H_PosBias[i] || !H_PosRes[i])
+            continue;
 
         convertTH3DtoMeanSigma(V_3D[i], V_PosBias[i], V_PosRes[i]);
         convertTH3DtoMeanSigma(H_3D[i], H_PosBias[i], H_PosRes[i]);
+
         H_PosBias[i]->Write();
         H_PosRes[i]->Write();
         V_PosBias[i]->Write();
         V_PosRes[i]->Write();
 
-        // ----- Draw canvases -----
+        const char *hA = ctx.BoardName[H_boardID[i]];
+        const char *hB = ctx.BoardName[H_boardID[i + 1]];
+        const char *vA = ctx.BoardName[V_boardID[i]];
+        const char *vB = ctx.BoardName[V_boardID[i + 1]];
 
         // H bias
-        TCanvas *c_Hbias = new TCanvas(Form("c_Hbias_%d", i), "", 800, 600);
+        TCanvas *c_Hbias = new TCanvas(Form("c_Hbias_%s_%s", hA, hB), "", 800, 600);
         H_PosBias[i]->GetZaxis()->SetRangeUser(-1, 1);
         H_PosBias[i]->Draw("colz");
         c_Hbias->Write();
 
         // H resolution
-        TCanvas *c_Hres = new TCanvas(Form("c_Hres_%d", i), "", 800, 600);
+        TCanvas *c_Hres = new TCanvas(Form("c_Hres_%s_%s", hA, hB), "", 800, 600);
         H_PosRes[i]->GetZaxis()->SetRangeUser(0, 0.2);
         H_PosRes[i]->Draw("colz");
         c_Hres->Write();
 
         // V bias
-        TCanvas *c_Vbias = new TCanvas(Form("c_Vbias_%d", i), "", 800, 600);
+        TCanvas *c_Vbias = new TCanvas(Form("c_Vbias_%s_%s", vA, vB), "", 800, 600);
         V_PosBias[i]->GetZaxis()->SetRangeUser(-1, 1);
         V_PosBias[i]->Draw("colz");
         c_Vbias->Write();
 
         // V resolution
-        TCanvas *c_Vres = new TCanvas(Form("c_Vres_%d", i), "", 800, 600);
+        TCanvas *c_Vres = new TCanvas(Form("c_Vres_%s_%s", vA, vB), "", 800, 600);
         V_PosRes[i]->GetZaxis()->SetRangeUser(0, 1);
         V_PosRes[i]->Draw("colz");
         c_Vres->Write();
@@ -236,9 +279,12 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
     }
 
     file_->Close();
+    delete file_;
+    file_ = nullptr;
+    dir_ = nullptr;
 }
 
-inline bool Pos2DMap::getBinEdges(const RunContext &ctx) // from the TTree in Pos1D.root
+inline bool Pos2DMap::getBinEdges(const RunContext &ctx)
 {
     TFile *binFile = TFile::Open(Form("output2025/run%d_Pos1D.root", ctx.run_number), "READ");
     if (!binFile || binFile->IsZombie())
@@ -250,27 +296,42 @@ inline bool Pos2DMap::getBinEdges(const RunContext &ctx) // from the TTree in Po
     TTree *t_H = (TTree *)binFile->Get("Pos1D/t_Hpos");
     TTree *t_V = (TTree *)binFile->Get("Pos1D/t_Vpos");
 
+    if (!t_H || !t_V)
+    {
+        std::cerr << "Error: cannot find Pos1D/t_Hpos or Pos1D/t_Vpos\n";
+        binFile->Close();
+        return false;
+    }
+
+    const char *HrefName = ctx.BoardName[H_boardID[1]]; // "H1"
+    const char *VrefName = ctx.BoardName[V_boardID[1]]; // "V1"
+
     std::vector<double> peaksH;
     std::vector<double> peaksV;
+
     peaksH.reserve(t_H->GetEntries());
     peaksV.reserve(t_V->GetEntries());
 
-    double peak_H1;
-    double peak_V1;
+    double peak_Href = 0.0;
+    double peak_Vref = 0.0;
 
-    t_H->SetBranchAddress("H1", &peak_H1);
-    t_V->SetBranchAddress("V1", &peak_V1);
+    t_H->SetBranchAddress(HrefName, &peak_Href);
+    t_V->SetBranchAddress(VrefName, &peak_Vref);
 
-    for (int i = 0; i < t_H->GetEntries(); i++)
+    for (int i = 0; i < t_H->GetEntries(); ++i)
     {
         t_H->GetEntry(i);
-        peaksH.push_back(peak_H1 - offset_origin);
+        peaksH.push_back(peak_Href - offset_origin);
     }
-    for (int i = 0; i < t_V->GetEntries(); i++)
+
+    for (int i = 0; i < t_V->GetEntries(); ++i)
     {
         t_V->GetEntry(i);
-        peaksV.push_back(peak_V1 - offset_origin);
+        peaksV.push_back(peak_Vref - offset_origin);
     }
+
+    HbinEdges.clear();
+    VbinEdges.clear();
 
     convertPeaksToBinEdges(peaksH, HbinEdges);
     convertPeaksToBinEdges(peaksV, VbinEdges);
@@ -280,7 +341,8 @@ inline bool Pos2DMap::getBinEdges(const RunContext &ctx) // from the TTree in Po
 
     if (nXbins <= 0 || nYbins <= 0)
     {
-        std::cerr << "FATAL: invalid nbins (nXbins=" << nXbins << ", nYbins=" << nYbins << ")\n";
+        std::cerr << "FATAL: invalid nbins (nXbins=" << nXbins
+                  << ", nYbins=" << nYbins << ")\n";
         binFile->Close();
         return false;
     }
@@ -291,6 +353,7 @@ inline bool Pos2DMap::getBinEdges(const RunContext &ctx) // from the TTree in Po
         binFile->Close();
         return false;
     }
+
     if (!edgesStrictlyIncreasing(VbinEdges))
     {
         std::cerr << "FATAL: VbinEdges not strictly increasing\n";

@@ -50,7 +50,6 @@ void alignment_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<CommonModeSub>());
   pipe.add(std::make_unique<Clustering>());
   pipe.add(std::make_unique<CalData>());
@@ -95,7 +94,6 @@ void spillID_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<CommonModeSub>());
   pipe.add(std::make_unique<Clustering>());
   pipe.add(std::make_unique<SpillIDAssigner>());
@@ -139,7 +137,6 @@ void noise_analyser(HitStream &stream, RunContext &ctx)
 
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<NoiseAnalyzer>());
   pipe.name();
@@ -173,7 +170,6 @@ void noise_correlation_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<CorrMap>()); // correlation map is very time-consuming; limits the number of frames to be analyzed
 
@@ -210,7 +206,6 @@ void sum1D_analyser(HitStream &stream, RunContext &ctx)
 {
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<SpillIDInput>());
   pipe.add(std::make_unique<Sum1D>());
 
@@ -255,7 +250,6 @@ void resolution_2DMap(HitStream &stream, RunContext &ctx)
   AnalysisPipeline<Fullframe> pipe;
   pipe.add(std::make_unique<BkgSub>());
   pipe.add(std::make_unique<SpillIDInput>());
-  pipe.add(std::make_unique<UnCalData>());
   pipe.add(std::make_unique<CommonModeSub>());
   pipe.add(std::make_unique<Clustering>());
   pipe.add(std::make_unique<CalData>());

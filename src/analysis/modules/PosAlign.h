@@ -48,10 +48,10 @@ void PosAlign::on_begin_run(const RunContext &ctx)
 
 void PosAlign::readIn_align(const RunContext &ctx)
 {
-    TFile *file = TFile::Open(Form("output/%s_Pos1D.root", ctx.ALIGN_runname), "READ");
+    TFile *file = TFile::Open(Form("output2025/%s_Pos1D.root", ctx.ALIGN_runname), "READ");
     if (!file)
     {
-        std::cout << Form("output/%s_Pos1D.root does not exist ", ctx.ALIGN_runname) << std::endl;
+        std::cout << Form("output2025/%s_Pos1D.root does not exist ", ctx.ALIGN_runname) << std::endl;
     }
 
     TF1 *H_Fit[3]{};
@@ -79,7 +79,7 @@ void PosAlign::readIn_align(const RunContext &ctx)
         }
     }
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < nrBoards; i++)
     {
         std::cout << "alignment factor: " << intercept_scaled[i] << " " << slope_scaled[i] << std::endl;
     }

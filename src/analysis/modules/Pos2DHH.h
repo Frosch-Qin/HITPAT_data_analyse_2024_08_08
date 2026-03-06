@@ -13,7 +13,7 @@ public:
     protected:
     void on_begin_run(const RunContext &ctx) override
     {
-        file_ = new TFile(Form("output/run%d_Pos2DHH.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_Pos2DHH.root", ctx.run_number), "RECREATE");
 
         createHistograms(ctx);
     }

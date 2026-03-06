@@ -240,7 +240,7 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
 
 inline bool Pos2DMap::getBinEdges(const RunContext &ctx) // from the TTree in Pos1D.root
 {
-    TFile *binFile = TFile::Open(Form("output/run%d_Pos1D.root", ctx.run_number), "READ");
+    TFile *binFile = TFile::Open(Form("output2025/run%d_Pos1D.root", ctx.run_number), "READ");
     if (!binFile || binFile->IsZombie())
     {
         std::cerr << "Error: cannot open file to get bin edges.\n";

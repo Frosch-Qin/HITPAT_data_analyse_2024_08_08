@@ -51,7 +51,7 @@ private:
 
 inline void Pos1D::on_begin_run(const RunContext &ctx)
 {
-    file_ = new TFile(Form("output/run%d_Pos1D.root", ctx.run_number), "RECREATE");
+    file_ = new TFile(Form("output2025/run%d_Pos1D.root", ctx.run_number), "RECREATE");
     createHistograms(ctx);
 }
 

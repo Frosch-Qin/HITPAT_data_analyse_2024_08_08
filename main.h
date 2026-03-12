@@ -283,3 +283,43 @@ void resolution_2DMap(HitStream &stream, RunContext &ctx)
   stream.close();
   return;
 }
+
+
+void ScanXY_analyser(HitStream &stream, RunContext &ctx)
+{
+
+  AnalysisPipeline<Fullframe> pipe;
+  pipe.add(std::make_unique<BkgSub>());
+  pipe.add(std::make_unique<SpillIDInput>());
+  pipe.add(std::make_unique<CommonModeSub>());
+  pipe.add(std::make_unique<Clustering>());
+  pipe.add(std::make_unique<CalData>());
+  pipe.add(std::make_unique<Algo>("grarms"));
+  pipe.add(std::make_unique<ScanXY>());
+
+  pipe.name();
+  pipe.begin_run(ctx);
+
+  // ---- Frame loop ----
+  Fullframe frame;
+  long i = 0;
+  stream.reset();
+  while (stream.next(frame))
+  {
+    FrameTags tags;
+    tags.frame_index = i;
+    pipe.process(frame, i, tags);
+
+    if (i % 100000 == 0)
+    {
+      // print tag for each frame
+      std::cout << tags.to_string() << "\n";
+      std::cout << "Processing frame for ScanXY " << i << "\n";
+    }
+    ++i;
+  }
+  pipe.end_run(ctx);
+
+  stream.close();
+  return;
+}

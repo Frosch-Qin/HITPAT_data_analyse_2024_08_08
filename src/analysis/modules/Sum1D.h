@@ -124,6 +124,7 @@ private:
 
         for (int i = 0; i < nrBoards; ++i)
         {
+            const char * boardNamei = ctx.BoardName[i]; 
             // set data
             for (int j = 0; j < 320; ++j)
             {
@@ -143,15 +144,15 @@ private:
 
             //set X axis range 0 to 319, title ChannelID
             pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
-            pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            pedestalA_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
             pedestalB_graph[i]->GetXaxis()->SetRangeUser(0, 319);
-            pedestalB_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            pedestalB_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
             signal_graph[i]->GetXaxis()->SetRangeUser(0, 319);
-            signal_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            signal_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
             signal_sub_pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
-            signal_sub_pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            signal_sub_pedestalA_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
             pedestalB_sub_pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
-            pedestalB_sub_pedestalA_graph[i]->GetXaxis()->SetTitle("ChannelID");
+            pedestalB_sub_pedestalA_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
 
             pedestalA_graph[i]->Write();
             pedestalB_graph[i]->Write();

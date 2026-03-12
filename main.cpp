@@ -37,7 +37,8 @@ int main(int argc, char **argv)
   sum1D_analyser(stream, ctx);
 
   // alignment_analyser(stream, ctx);
-  resolution_2DMap(stream, ctx);
+  // resolution_2DMap(stream, ctx);
+  // ScanXY_analyser(stream, ctx);
 
 
   stream.close();

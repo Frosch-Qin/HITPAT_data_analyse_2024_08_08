@@ -11,7 +11,7 @@ public:
         return "NoiseAnalyzer";
     }
 
-    protected:
+protected:
     void on_begin_run(const RunContext &ctx) override
     {
 
@@ -35,7 +35,7 @@ public:
             for (int i = 0; i < nrBoards; ++i)
             {
 
-                if (is_noise_run || (tags.SpillID == -2 || tags.SpillID != -1))  //noise run or between spills
+                if (is_noise_run || (tags.SpillID == -2 || tags.SpillID != -1)) // noise run or between spills
                 {
                     double mean_first_4_channel = get_avg(frame.boards[i].data, 4);
                     double mean_all = get_avg(frame.boards[i].data, frame.boards[i].nrChannels);
@@ -83,27 +83,28 @@ public:
         dir_->cd();
         for (int i = 0; i < nrBoards; ++i)
         {
+            const char *boardNamei = ctx.BoardName[i];
             noise_all[i]->Scale(1.0 / noise_all[i]->Integral());
-            noise_all[i]->GetXaxis()->SetTitle("noise (ADC)");
+            noise_all[i]->GetXaxis()->SetTitle(Form("%s noise (ADC)", boardNamei));
             noise_all[i]->GetYaxis()->SetTitle("Fraction");
             noise_frame_mean[i]->Scale(1.0 / noise_frame_mean[i]->Integral());
-            noise_frame_mean[i]->GetXaxis()->SetTitle("noise (ADC)");
+            noise_frame_mean[i]->GetXaxis()->SetTitle(Form("%s noise (ADC)", boardNamei));
             noise_frame_mean[i]->GetYaxis()->SetTitle("Fraction");
             noise_all_sub_cc[i]->Scale(1.0 / noise_all_sub_cc[i]->Integral());
-            noise_all_sub_cc[i]->GetXaxis()->SetTitle("noise (ADC)");
+            noise_all_sub_cc[i]->GetXaxis()->SetTitle(Form("%s noise (ADC)", boardNamei));
             noise_all_sub_cc[i]->GetYaxis()->SetTitle("Fraction");
             noise_channel[i]->Scale(1.0);
-            noise_channel[i]->GetXaxis()->SetTitle("Channel ID");
-            noise_channel[i]->GetYaxis()->SetTitle("Noise (ADC)");
+            noise_channel[i]->GetXaxis()->SetTitle(Form("%s Channel ID",boardNamei));
+            noise_channel[i]->GetYaxis()->SetTitle(Form("%s Noise (ADC)", boardNamei));
             noise_channel_sub_cc[i]->Scale(1.0);
-            noise_channel_sub_cc[i]->GetXaxis()->SetTitle("Channel ID");
-            noise_channel_sub_cc[i]->GetYaxis()->SetTitle("Noise (ADC)");
+            noise_channel_sub_cc[i]->GetXaxis()->SetTitle(Form("%s Channel ID",boardNamei));
+            noise_channel_sub_cc[i]->GetYaxis()->SetTitle(Form("%s Noise (ADC)", boardNamei));
             noise_frame_std_hist[i]->Scale(1.0 / noise_frame_std_hist[i]->Integral());
             noise_frame_std_hist[i]->GetXaxis()->SetTitle("Noise frame std (ADC)");
             noise_frame_std_hist[i]->GetYaxis()->SetTitle("Fraction");
 
-            noise_correlation[i]->GetXaxis()->SetTitle("Channel 318");
-            noise_correlation[i]->GetYaxis()->SetTitle("Channel 319");
+            noise_correlation[i]->GetXaxis()->SetTitle(Form("%s Channel 318",boardNamei));
+            noise_correlation[i]->GetYaxis()->SetTitle(Form("%s Channel 319",boardNamei));
 
             noise_all[i]->Write();
             noise_frame_mean[i]->Write();

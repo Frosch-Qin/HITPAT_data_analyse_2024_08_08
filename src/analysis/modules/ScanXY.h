@@ -32,7 +32,7 @@ protected:
             if (tags.SpillID >= 0) // if it is during a spill
             {
 
-                Pos2D[i]->Fill(tags.boardTags[H_boardID[i]].Position, tags.boardTags[V_boardID[i]].Position);
+                Pos2D[i]->Fill(tags.boardTags[H_boardID[i]].Position - offset_origin, tags.boardTags[V_boardID[i]].Position - offset_origin);
             }
         }
     }
@@ -64,6 +64,7 @@ protected:
 private:
     TFile *file_ = nullptr;
     TDirectory *dir_ = nullptr;
+    const double offset_origin = 128.4;
 
     TH2D *Pos2D[3] = {nullptr, nullptr, nullptr}; // prepare for 3 stations
 
@@ -84,9 +85,12 @@ inline void ScanXY::createHistograms(const RunContext &ctx)
 
     for (int i = 0; i < nrBoards / 2; ++i)
     {
-        Pos2D[i] = new TH2D(Form("Pos2D_H%dV%d", i, i), Form("Pos2D_H%dV%d", i, i), 2560, -128, 128, 2560, -128, 128);
+        const char* HboardName = ctx.BoardName[ctx.H_boardID[i]];
+        const char* VboardName = ctx.BoardName[ctx.V_boardID[i]];
 
-        Pos2D[i]->GetXaxis()->SetTitle(Form("H%d position [mm]", i));
-        Pos2D[i]->GetYaxis()->SetTitle(Form("V%d position [mm]", i));
+        Pos2D[i] = new TH2D(Form("Pos2D_%s%s",HboardName, VboardName), Form("Pos2D_%s%s",HboardName, VboardName), 2560, -128, 128, 2560, -128, 128);
+
+        Pos2D[i]->GetXaxis()->SetTitle(Form("%s position [mm]", HboardName));
+        Pos2D[i]->GetYaxis()->SetTitle(Form("%s position [mm]", VboardName));
     }
 }

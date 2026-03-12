@@ -15,7 +15,7 @@ public:
         return "CorrMap";
     }
 
-    protected:
+protected:
     void on_begin_run(const RunContext &ctx) override
     {
         file_ = new TFile(Form("output/Noise/run%d_CorrMap.root", ctx.run_number), "RECREATE");
@@ -160,6 +160,7 @@ private:
     void create2dHistograms(const RunContext &ctx, int board_id)
     {
 
+        const char *boardNamei = ctx.BoardName[board_id];
         for (int i = 0; i < 320; i++)
         {
             for (int j = 0; j < 320; j++)
@@ -168,8 +169,8 @@ private:
             }
         }
         channel_corr_map[board_id] = new TH2D(Form("channel_corr_map_board%d", board_id), Form("channel_corr_map_%d", board_id), 320, -0.5, 319.5, 320, -0.5, 319.5);
-        channel_corr_map[board_id]->GetXaxis()->SetTitle("Channel ID");
-        channel_corr_map[board_id]->GetYaxis()->SetTitle("Channel ID");
+        channel_corr_map[board_id]->GetXaxis()->SetTitle(Form("%s Channel ID", boardNamei));
+        channel_corr_map[board_id]->GetYaxis()->SetTitle(Form("%s Channel ID", boardNamei));
         channel_corr_map[board_id]->GetZaxis()->SetTitle("Correlation Coefficient");
         channel_corr_1d[board_id] = new TH1D(Form("channel_corr_1d_board%d", board_id), Form("channel_corr_1d_%d", board_id), 1000, -1, 1);
         channel_corr_1d[board_id]->GetXaxis()->SetTitle("Correlation Coefficient");

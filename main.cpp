@@ -34,10 +34,11 @@ int main(int argc, char **argv)
   // spillID_analyser(stream, ctx);
   // noise_analyser(stream, ctx);
   // noise_correlation_analyser(stream, ctx);
-  // sum1D_analyser(stream, ctx);
+  sum1D_analyser(stream, ctx);
 
   // alignment_analyser(stream, ctx);
-  resolution_2DMap(stream, ctx);
+  // resolution_2DMap(stream, ctx);
+  // ScanXY_analyser(stream, ctx);
 
 
   stream.close();

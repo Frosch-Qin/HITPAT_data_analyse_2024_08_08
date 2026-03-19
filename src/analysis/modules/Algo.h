@@ -3,6 +3,8 @@
 
 #include "../IAnalyzer.h"
 #include "../FrameTags.h"
+#include <map>
+#include <functional>
 
 class Algo : public IAnalyzer<Fullframe>
 {
@@ -14,7 +16,7 @@ public:
         return algo_name;
     }
 
-    protected:
+protected:
     void on_begin_run(const RunContext &ctx) override
     {
 
@@ -57,5 +59,4 @@ private:
         algorithmMap["fascluster"] = fas_cluster<Fullframe>;
         algorithmMap["grarms"] = recon_gravity_rms<Fullframe>;
     }
-
 };

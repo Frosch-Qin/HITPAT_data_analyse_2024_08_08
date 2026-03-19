@@ -36,6 +36,8 @@
 #include <TLatex.h>
 #include <TLegend.h>
 
+#include "../src/analysis/RunContext.h"
+
 #include "../plot/lhcbStyle.h"
 
 double *mean_std(TGraph *g, double left_border, double right_border)
@@ -68,6 +70,13 @@ double *mean_std(TGraph *g, double left_border, double right_border)
 
 int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, double right_nr_sigma = 1.5)
 {
+    RunContext ctx;
+    const char* boardName=ctx.BoardName[boardID];
+    std::printf("DEBUG: boardID=%d, run_name=%p, run_name_str=%s\n",
+                boardID,
+                (const void*)run_name,
+                run_name ? run_name : "(nullptr)");
+                
     lhcbStyle();
     double boundary_nr_sigma[2] = {left_nr_sigma, right_nr_sigma};
 
@@ -89,7 +98,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
         return 1;
     }
 
-    TGraph *sumsignal_graph = (TGraph *)rootFile->Get(Form("Sum1D/signal_sub_pedestalA_graph_%d", boardID));
+    TGraph *sumsignal_graph = (TGraph *)rootFile->Get(Form("Sum1D/signal_sub_pedestalA_graph_%s", boardName));
     if (!sumsignal_graph){
         std::cerr << "Error: cannot find histogram \n";
         rootFile->Close();
@@ -99,7 +108,7 @@ int cal_board(const char *run_name, int boardID, double left_nr_sigma = 1.5, dou
     sumsignal_graph->GetXaxis()->SetTitle("Channel ID");
     sumsignal_graph->GetYaxis()->SetTitle("avg amplitude");
 
-    TGraph *pedestal_uncertainty_graph = (TGraph *)rootFile->Get(Form("Sum1D/pedestalB_sub_pedestalA_graph_%d", boardID));
+    TGraph *pedestal_uncertainty_graph = (TGraph *)rootFile->Get(Form("Sum1D/pedestalB_sub_pedestalA_graph_%s", boardName));
 
     /*************************************for sum signal************************************************/
     // get the sumsignal

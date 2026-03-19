@@ -42,6 +42,7 @@
 #include "src/analysis/modules/ScanXY.h"
 #include "src/analysis/modules/Pos2DHH.h"
 #include "src/analysis/modules/Pos1D.h"
+#include "src/analysis/modules/Sum1DPos.h"
 
 
 
@@ -325,6 +326,23 @@ void ScanXY_analyser(HitStream &stream, RunContext &ctx)
     }
     ++i;
   }
+  pipe.end_run(ctx);
+
+  stream.close();
+  return;
+}
+
+
+void convert_Sum1DPos(HitStream &stream, RunContext &ctx)
+{
+
+  (void) stream; 
+  AnalysisPipeline<Fullframe> pipe;
+  
+  pipe.add(std::make_unique<Sum1DPos>());
+
+  pipe.name();
+  pipe.begin_run(ctx);
   pipe.end_run(ctx);
 
   stream.close();

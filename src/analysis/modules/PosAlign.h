@@ -27,9 +27,7 @@ protected:
                 continue;
 
             tags.boardTags[i].Position =
-                tags.boardTags[i].Position * slope_scaled[i]
-                + intercept_scaled[i]
-                - offset_origin;
+                tags.boardTags[i].Position * slope_scaled[i] + intercept_scaled[i] - offset_origin;
         }
     }
 
@@ -62,17 +60,15 @@ inline void PosAlign::readIn_align(const RunContext &ctx)
     }
 
     // reset defaults
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < nrBoards; ++i)
     {
         intercept_scaled[i] = 0.0;
         slope_scaled[i] = 1.0;
     }
 
-    // Horizontal boards
-    for (int i = 0; i < nrBoards / 2; ++i)
+    for (int i = 0; i < nrBoards; ++i)
     {
-        const int boardID = ctx.H_boardID[i];
-        const char *boardName = ctx.BoardName[boardID];
+        const char *boardName = ctx.BoardName[i];
 
         TF1 *fit = (TF1 *)file->Get(Form("Pos1D/%s_Fit", boardName));
         if (!fit)
@@ -81,33 +77,8 @@ inline void PosAlign::readIn_align(const RunContext &ctx)
             continue;
         }
 
-        // reference board keeps default (0,1)
-        if (i != 1)
-        {
-            intercept_scaled[boardID] = fit->GetParameter(0);
-            slope_scaled[boardID] = fit->GetParameter(1);
-        }
-    }
-
-    // Vertical boards
-    for (int i = 0; i < nrBoards / 2; ++i)
-    {
-        const int boardID = ctx.V_boardID[i];
-        const char *boardName = ctx.BoardName[boardID];
-
-        TF1 *fit = (TF1 *)file->Get(Form("Pos1D/%s_Fit", boardName));
-        if (!fit)
-        {
-            std::cout << "Cannot find TF1 fit for " << boardName << std::endl;
-            continue;
-        }
-
-        // reference board keeps default (0,1)
-        if (i != 1)
-        {
-            intercept_scaled[boardID] = fit->GetParameter(0);
-            slope_scaled[boardID] = fit->GetParameter(1);
-        }
+        intercept_scaled[i] = fit->GetParameter(0);
+        slope_scaled[i] = fit->GetParameter(1);
     }
 
     for (int i = 0; i < nrBoards; ++i)

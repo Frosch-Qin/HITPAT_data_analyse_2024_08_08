@@ -12,7 +12,7 @@ public:
         return "SpillIDAssigner";
     }
 
-    protected:
+protected:
     void on_begin_run(const RunContext &ctx) override
     {
         file_ = new TFile(Form("output/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
@@ -66,12 +66,12 @@ private:
             if (y > 0 && y_last == 0)
             {
                 spill_start_time0.push_back(x);
-                // std::cout << "spill start time: " << x << std::endl;
+                std::cout << "spill start time: " << x << std::endl;
             }
             if (y == 0 && y_last > 0)
             {
                 spill_end_time0.push_back(x);
-                // std::cout << "spill end time: " << x << std::endl;
+                std::cout << "spill end time: " << x << std::endl;
             }
         }
 
@@ -138,12 +138,13 @@ private:
         file_->cd();
 
         ClusterTimeDir->cd();
-        for (auto &hist : ClusterTimeHistogram)
-            hist->Write();
+        for (int i = 0; i < nrBoards; ++i)
+            ClusterTimeHistogram[i]->Write();
 
         ClusterSizeDir->cd();
-        for (auto &hist : ClusterSizeHistogram)
-            hist->Write();
+        for (int i = 0; i < nrBoards; ++i)
+            ClusterSizeHistogram[i]->Write();
+
         BeamOnTimeDir->cd();
         for (int i = 0; i < nrBoards; i++)
         {
@@ -151,46 +152,38 @@ private:
             BeamOnTimeGraph[i]->SetMarkerSize(0.5);
             BeamOnTimeGraph[i]->SetMarkerColor(2);
             BeamOnTimeGraph[i]->SetLineColor(2);
-            // get beamon
+
             for (int j = 0; j < time_bins; j++)
             {
                 double y = 0;
-                if (ClusterTimeHistogram[i]->GetBinContent(j + 1, 2) >= 2) // for board1 and 2 rho~0; the chance get a false positive is very low...
-                {
-                    y = 2; // beam on
-                }
-                // else if (ClusterTimeHistogram[i]->GetBinContent(j + 1, 2) >= 2)
-                // {
-                //     y = 1; // beam edge
-                // }
+                if (ClusterTimeHistogram[i]->GetBinContent(j + 1, 2) >= 2)
+                    y = 2;
                 else
-                {
-                    y = 0; // beam off
-                }
-                BeamOnTimeGraph[i]->SetPoint(j, ClusterTimeHistogram[i]->GetXaxis()->GetBinCenter(j + 1), y);
+                    y = 0;
+
+                BeamOnTimeGraph[i]->SetPoint(
+                    j,
+                    ClusterTimeHistogram[i]->GetXaxis()->GetBinCenter(j + 1),
+                    y);
             }
             BeamOnTimeGraph[i]->Write();
         }
 
-        // for BeamOnTimeGraph_12
         for (int j = 0; j < time_bins; j++)
         {
             double y = 0;
-            if (ClusterTimeHistogram[1]->GetBinContent(j + 1, 2) >= 2 || ClusterTimeHistogram[2]->GetBinContent(j + 1, 2) >= 2)
+            if (ClusterTimeHistogram[1]->GetBinContent(j + 1, 2) >= 2 ||
+                ClusterTimeHistogram[2]->GetBinContent(j + 1, 2) >= 2)
             {
-                y = 2; // beam on
+                y = 2;
             }
-            // else if (ClusterTimeHistogram[1]->GetBinContent(j + 1, 2) >= 2 || ClusterTimeHistogram[2]->GetBinContent(j + 1, 2) >= 2)
-            // {
-            //     y = 1; // beam edge
-            // }
-            else
-            {
-                y = 0; // beam off
-            }
-            BeamOnTimeGraph_12->SetPoint(j, ClusterTimeHistogram[1]->GetXaxis()->GetBinCenter(j + 1), y);
+            BeamOnTimeGraph_12->SetPoint(
+                j,
+                ClusterTimeHistogram[1]->GetXaxis()->GetBinCenter(j + 1),
+                y);
         }
         BeamOnTimeGraph_12->Write();
+
         file_->cd();
         fillTree();
         spill_time_graph->Write();
@@ -234,7 +227,6 @@ private:
         spill_time_graph->GetXaxis()->SetTitle("Time (s)");
         spill_time_graph->GetYaxis()->SetTitle("Spill Status");
     }
-
 
     TFile *file_;
     TTree *tree;

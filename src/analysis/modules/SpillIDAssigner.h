@@ -40,7 +40,7 @@ private:
     void fillHistograms(beamRecon CPUrecon[6], double eventTime)
     {
 
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < nrBoards; i++)
         {
             ClusterTimeHistogram[i]->Fill(eventTime, CPUrecon[i].Cluster_num);
             if (CPUrecon[i].Cluster_num > 0)
@@ -145,7 +145,7 @@ private:
         for (auto &hist : ClusterSizeHistogram)
             hist->Write();
         BeamOnTimeDir->cd();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < nrBoards; i++)
         {
             BeamOnTimeGraph[i]->SetMarkerStyle(20);
             BeamOnTimeGraph[i]->SetMarkerSize(0.5);
@@ -203,7 +203,7 @@ private:
         time_bins = int(totaltime * 100); // 100 bins for 1 second
         ClusterTimeDir = file_->mkdir("ClusterTimeDir");
         ClusterTimeDir->cd();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < nrBoards; i++)
         {
             ClusterTimeHistogram[i] = new TH2D(Form("ClusterTimeHistogram_%d", i), Form("ClusterTimeHistogram_%d", i), time_bins, 0, totaltime, 2, -0.5, 1.5);
         }
@@ -211,7 +211,7 @@ private:
 
         ClusterSizeDir = file_->mkdir("ClusterSizeDir");
         ClusterSizeDir->cd();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < nrBoards; i++)
         {
             ClusterSizeHistogram[i] = new TH1D(Form("ClusterSizeHistogram_%d", i), Form("ClusterSizeHistogram_%d", i), 320, -0.5, 319.5);
         }
@@ -219,7 +219,7 @@ private:
 
         BeamOnTimeDir = file_->mkdir("BeamOnTimeDir");
         BeamOnTimeDir->cd();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < nrBoards; i++)
         {
             BeamOnTimeGraph[i] = new TGraph(time_bins);
             BeamOnTimeGraph[i]->SetName(Form("BeamOnTimeGraph_%d", i));

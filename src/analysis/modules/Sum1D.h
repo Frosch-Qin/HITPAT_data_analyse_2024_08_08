@@ -99,6 +99,7 @@ private:
 
         for (int i = 0; i < nrBoards; ++i)
         {
+            const char * boardNamei = ctx.BoardName[i]; 
             pedestalA_graph[i] = new TGraph();
             pedestalB_graph[i] = new TGraph();
             signal_graph[i] = new TGraph();
@@ -106,11 +107,11 @@ private:
             pedestalB_sub_pedestalA_graph[i] = new TGraph();
 
             // set name
-            pedestalA_graph[i]->SetName(Form("pedestalA_graph_%d", i));
-            pedestalB_graph[i]->SetName(Form("pedestalB_graph_%d", i));
-            signal_graph[i]->SetName(Form("signal_graph_%d", i));
-            signal_sub_pedestalA_graph[i]->SetName(Form("signal_sub_pedestalA_graph_%d", i));
-            pedestalB_sub_pedestalA_graph[i]->SetName(Form("pedestalB_sub_pedestalA_graph_%d", i));
+            pedestalA_graph[i]->SetName(Form("pedestalA_graph_%s", boardNamei));
+            pedestalB_graph[i]->SetName(Form("pedestalB_graph_%s", boardNamei));
+            signal_graph[i]->SetName(Form("signal_graph_%s", boardNamei));
+            signal_sub_pedestalA_graph[i]->SetName(Form("signal_sub_pedestalA_graph_%s", boardNamei));
+            pedestalB_sub_pedestalA_graph[i]->SetName(Form("pedestalB_sub_pedestalA_graph_%s", boardNamei));
 
 
         }

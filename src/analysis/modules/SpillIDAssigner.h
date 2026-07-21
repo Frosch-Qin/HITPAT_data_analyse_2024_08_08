@@ -13,7 +13,7 @@ public:
     }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
         file_ = new TFile(Form("output2025/SpillID/run%d_SpillID.root", ctx.run_number), "RECREATE");
 

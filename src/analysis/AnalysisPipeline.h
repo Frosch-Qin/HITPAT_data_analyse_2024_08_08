@@ -21,7 +21,7 @@ public:
     }
   }
 
-  void begin_run(const RunContext &ctx)
+  void begin_run(RunContext &ctx)
   {
     for (auto &m : modules_)
       m->begin_run(ctx);

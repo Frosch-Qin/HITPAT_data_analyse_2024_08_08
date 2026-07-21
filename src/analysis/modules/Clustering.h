@@ -16,7 +16,7 @@ public:
     }
 
     protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
 
         for (int i = 0; i < nrBoards; ++i)
@@ -36,6 +36,23 @@ public:
                     // Do something if cluster is located
                 }
             }
+
+            // if all the boards get cluster, then tag has signal
+            bool check_clusters = true;
+            for (int i = 0; i < nrBoards; ++i)
+            {
+                if (tags.boardTags[i].Cluster_num > 0)
+                {
+                    check_clusters = check_clusters && true;
+                }
+                else
+                {
+                    check_clusters = check_clusters && false;
+                }
+            }
+            tags.Has_signal = check_clusters;
+
+            // std::cout << "Clustering check for frame " << frame_index << ": " << (check_clusters ? "Signal found" : "No signal") << std::endl;
         }
     }
     void end_run(const RunContext &ctx) override

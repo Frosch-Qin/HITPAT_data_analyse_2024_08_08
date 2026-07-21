@@ -17,7 +17,7 @@ public:
     }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
 
         define_algorithmMap();

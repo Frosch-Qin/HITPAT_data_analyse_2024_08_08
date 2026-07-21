@@ -16,7 +16,7 @@ public:
     std::string name() const override { return "Pos1D"; }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override;
+    void on_begin_run(RunContext &ctx) override;
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override;
     void end_run(const RunContext &ctx) override;
 
@@ -50,9 +50,9 @@ private:
                    int expected_peak_count = 80);
 };
 
-inline void Pos1D::on_begin_run(const RunContext &ctx)
+inline void Pos1D::on_begin_run(RunContext &ctx)
 {
-    file_ = new TFile(Form("output2025/run%d_Pos1D.root", ctx.run_number), "RECREATE");
+    file_ = new TFile(Form("output2025/run%d_%s.root", ctx.run_number, name().c_str()), "RECREATE");
     createHistograms(ctx);
 }
 
@@ -61,10 +61,10 @@ inline void Pos1D::createHistograms(const RunContext &ctx)
     if (!file_)
         return;
 
-    dir_ = file_->GetDirectory("Pos1D");
-    if (!dir_)
-        dir_ = file_->mkdir("Pos1D");
+    dir_ = file_->GetDirectory(name().c_str());
 
+    if (!dir_)
+        dir_ = file_->mkdir(name().c_str());
     dir_->cd();
 
     for (int i = 0; i < nrBoards; ++i)

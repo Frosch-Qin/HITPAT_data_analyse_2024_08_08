@@ -16,7 +16,7 @@ public:
     }
 
     protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
 
         get_calfac(ctx);
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    bool FPGA_calibrated = false;
+    bool FPGA_calibrated = false; // reserved for future use: eg. if true, do not calibrate
 
     double calFac[6][320] = {0}; // 6 boards, 320 channels
 

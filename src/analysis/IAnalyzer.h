@@ -19,7 +19,7 @@ public:
   virtual std::string name() const = 0;
 
   // Called once at the start of a run (optional to override)
-  virtual void begin_run(const RunContext &ctx) final
+  virtual void begin_run(RunContext &ctx) final
   {
     init_common(ctx);
     on_begin_run(ctx);
@@ -37,7 +37,7 @@ protected:
   int H_boardID[3];
 
   // Derived classes override THESE instead of begin_run/end_run
-  virtual void on_begin_run(const RunContext & /*ctx*/) {}
+  virtual void on_begin_run(RunContext & /*ctx*/) {}
   virtual void on_end_run(const RunContext & /*ctx*/) {}
 
 private:

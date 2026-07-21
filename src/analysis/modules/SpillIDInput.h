@@ -14,9 +14,10 @@ public:
     }
 
     protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
         get_spill_time(ctx);
+        ctx.spillNum = spillNum;
         readout_rate = ctx.readout_rate;
     }
 

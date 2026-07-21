@@ -14,7 +14,7 @@ public:
     }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override;
+    void on_begin_run(RunContext &ctx) override;
 
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override
     {
@@ -45,7 +45,7 @@ private:
     void readIn_align(const RunContext &ctx);
 };
 
-inline void PosAlign::on_begin_run(const RunContext &ctx)
+inline void PosAlign::on_begin_run(RunContext &ctx)
 {
     readIn_align(ctx);
 }

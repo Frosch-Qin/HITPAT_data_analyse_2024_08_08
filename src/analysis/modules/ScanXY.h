@@ -16,10 +16,10 @@ public:
     }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
 
-        file_ = new TFile(Form("output2025/run%d_ScanXY.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_%s.root", ctx.run_number, name().c_str()), "RECREATE");
 
         createHistograms(ctx);
     }
@@ -69,26 +69,25 @@ private:
     TH2D *Pos2D[3] = {nullptr, nullptr, nullptr}; // prepare for 3 stations
 
     void createHistograms(const RunContext &ctx);
-
 };
 // inline: later it may show up in multiple translation units.
 inline void ScanXY::createHistograms(const RunContext &ctx)
 {
     if (!file_)
         return;
-   
-    dir_ = file_->GetDirectory("ScanXY");
-    if (!dir_)
-        dir_ = file_->mkdir("ScanXY");
 
+    dir_ = file_->GetDirectory(name().c_str());
+
+    if (!dir_)
+        dir_ = file_->mkdir(name().c_str());
     dir_->cd();
 
     for (int i = 0; i < nrBoards / 2; ++i)
     {
-        const char* HboardName = ctx.BoardName[ctx.H_boardID[i]];
-        const char* VboardName = ctx.BoardName[ctx.V_boardID[i]];
+        const char *HboardName = ctx.BoardName[ctx.H_boardID[i]];
+        const char *VboardName = ctx.BoardName[ctx.V_boardID[i]];
 
-        Pos2D[i] = new TH2D(Form("Pos2D_%s%s",HboardName, VboardName), Form("Pos2D_%s%s",HboardName, VboardName), 2560, -128, 128, 2560, -128, 128);
+        Pos2D[i] = new TH2D(Form("Pos2D_%s%s", HboardName, VboardName), Form("Pos2D_%s%s", HboardName, VboardName), 2560, -128, 128, 2560, -128, 128);
 
         Pos2D[i]->GetXaxis()->SetTitle(Form("%s position [mm]", HboardName));
         Pos2D[i]->GetYaxis()->SetTitle(Form("%s position [mm]", VboardName));

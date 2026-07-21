@@ -27,7 +27,7 @@ inline void lhcbStyle() {
     lhcbStyle->SetPalette(1);
     lhcbStyle->SetPaperSize(20,26);
     lhcbStyle->SetPadTopMargin(0.12);
-    lhcbStyle->SetPadRightMargin(0.17);
+    lhcbStyle->SetPadRightMargin(0.20);
     lhcbStyle->SetPadBottomMargin(0.23);
     lhcbStyle->SetPadLeftMargin(0.17);
     lhcbStyle->SetTextFont(lhcbFont);

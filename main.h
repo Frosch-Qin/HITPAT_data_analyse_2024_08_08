@@ -43,6 +43,9 @@
 #include "src/analysis/modules/Pos2DHH.h"
 #include "src/analysis/modules/Pos1D.h"
 #include "src/analysis/modules/Sum1DPos.h"
+#include "src/analysis/modules/Sum1DMap.h"
+#include "src/analysis/modules/HistSpill.h"
+
 
 
 
@@ -336,6 +339,94 @@ void convert_Sum1DPos(HitStream &stream, RunContext &ctx)
 
   pipe.name();
   pipe.begin_run(ctx);
+  pipe.end_run(ctx);
+
+  stream.close();
+  return;
+}
+
+
+
+void HistSpill_analyser(HitStream &stream, RunContext &ctx)
+{
+
+  AnalysisPipeline<Fullframe> pipe;
+  pipe.add(std::make_unique<BkgSub>());
+  pipe.add(std::make_unique<FrameTagger>(false));
+  pipe.add(std::make_unique<SpillIDInput>());
+  pipe.add(std::make_unique<CommonModeSub>());
+  pipe.add(std::make_unique<Clustering>());
+  pipe.add(std::make_unique<CalData>());
+  pipe.add(std::make_unique<Algo>("grarms"));
+  pipe.add(std::make_unique<PosAlign>());
+  pipe.add(std::make_unique<HistSpill>());
+
+
+  pipe.name();
+  pipe.begin_run(ctx);
+
+  // ---- Frame loop ----
+  Fullframe frame;
+  long i = 0;
+  stream.reset();
+  while (stream.next(frame))
+  {
+    FrameTags tags;
+    tags.frame_index = i;
+    pipe.process(frame, i, tags);
+
+    if (i % 100000 == 0)
+    {
+      // print tag for each frame
+      std::cout << tags.to_string() << "\n";
+      std::cout << "Processing frame for 2DMap " << i << "\n";
+    }
+    ++i;
+  }
+  pipe.end_run(ctx);
+
+  stream.close();
+  return;
+}
+
+
+
+void Sum1DMap_analyser(HitStream &stream, RunContext &ctx)
+{
+
+  AnalysisPipeline<Fullframe> pipe;
+  pipe.add(std::make_unique<BkgSub>());
+  pipe.add(std::make_unique<FrameTagger>(true));
+  pipe.add(std::make_unique<SpillIDInput>());
+  pipe.add(std::make_unique<CommonModeSub>());
+  pipe.add(std::make_unique<Clustering>());
+  pipe.add(std::make_unique<CalData>());
+  pipe.add(std::make_unique<Algo>("grarms"));
+  pipe.add(std::make_unique<PosAlign>());
+  pipe.add(std::make_unique<Sum1DMap>());
+
+
+  pipe.name();
+  pipe.begin_run(ctx);
+
+  // ---- Frame loop ----
+  Fullframe frame;
+  long i = 0;
+  stream.reset();
+  while (stream.next(frame))
+  {
+    FrameTags tags;
+    tags.frame_index = i;
+    pipe.process(frame, i, tags);
+
+    if (i % 100000 == 0)
+    {
+      // print tag for each frame
+      std::cout << tags.to_string() << "\n";
+      std::cout << "Processing frame for 2DMap " << i << "\n";
+    }
+    ++i;
+  }
   pipe.end_run(ctx);
 
   stream.close();

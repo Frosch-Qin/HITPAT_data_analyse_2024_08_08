@@ -36,11 +36,15 @@ int main(int argc, char **argv)
   // noise_correlation_analyser(stream, ctx);
   // sum1D_analyser(stream, ctx);
 
-  alignment_analyser(stream, ctx);
-  resolution_2DMap(stream, ctx);
+  // alignment_analyser(stream, ctx);
+  // resolution_2DMap(stream, ctx);
   // ScanXY_analyser(stream, ctx);
 
-  convert_Sum1DPos(stream,ctx);
+  // convert_Sum1DPos(stream,ctx);
+
+  // HistSpill_analyser(stream,ctx);
+  Sum1DMap_analyser(stream,ctx);
+
 
   stream.close();
   return 0;

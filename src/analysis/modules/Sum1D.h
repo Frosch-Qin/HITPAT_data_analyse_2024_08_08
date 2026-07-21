@@ -14,10 +14,11 @@ public:
         return "Sum1D";
     }
 
-    protected:
-    void on_begin_run(const RunContext &ctx) override
+protected:
+    void on_begin_run(RunContext &ctx) override
     {
         file_ = new TFile(Form("output2025/run%d_Sum1D.root", ctx.run_number), "RECREATE");
+        get_calfac(ctx);
     }
 
     void process(Fullframe &frame, long frame_index, FrameTags &tags) override
@@ -69,7 +70,6 @@ public:
     }
 
 private:
-
     double pedestalA[6][320]{};
     double pedestalB[6][320]{};
     double signal[6][320]{};
@@ -89,9 +89,46 @@ private:
     TDirectory *dir_ = nullptr;
     TFile *file_ = nullptr;
 
+    // check if calibration file .root exists, if yes produce calibrated signal.
+    bool CALIBRATION_FILE_EXISTS = false;
+    double calFac[6][320] = {0}; // 6 boards, 320 channels
+    TGraph *signal_sub_pedestalA_graph_cali[6]{};
+
+
+
+    void get_calfac(const RunContext &ctx)
+    {
+        TFile *calFile = TFile::Open(Form("cal_pre/output2025/cal_%s.root", ctx.CAL_runname), "READ");
+
+        if (!calFile || calFile->IsZombie())
+        {
+            CALIBRATION_FILE_EXISTS = false;
+            return;
+        }else{
+            CALIBRATION_FILE_EXISTS = true;
+        }
+
+        TGraph *cal[nrBoards];
+        for (int i = 0; i < nrBoards; i++)
+        {
+            cal[i] = (TGraph *)calFile->Get(Form("cal%d", i));
+        }
+
+        for (int j = 0; j < nrBoards; j++)
+        {
+            for (int i = 0; i < 320; i++)
+            {
+                calFac[j][i] = cal[j]->GetPointY(i) / 8192;
+                // std::cout << "Board " << j << " Channel " << i << " Uncalibration Factor: " << calFac[j][i] << std::endl;
+                // calFac[j][i] = 1; //for run1 to run5
+            }
+        }
+        calFile->Close();
+    }
+
     void create_histograms(const RunContext &ctx)
     {
-       
+
         dir_ = file_->GetDirectory("Sum1D");
         if (!dir_)
             dir_ = file_->mkdir("Sum1D");
@@ -99,7 +136,7 @@ private:
 
         for (int i = 0; i < nrBoards; ++i)
         {
-            const char * boardNamei = ctx.BoardName[i]; 
+            const char *boardNamei = ctx.BoardName[i];
             pedestalA_graph[i] = new TGraph();
             pedestalB_graph[i] = new TGraph();
             signal_graph[i] = new TGraph();
@@ -113,7 +150,11 @@ private:
             signal_sub_pedestalA_graph[i]->SetName(Form("signal_sub_pedestalA_graph_%s", boardNamei));
             pedestalB_sub_pedestalA_graph[i]->SetName(Form("pedestalB_sub_pedestalA_graph_%s", boardNamei));
 
-
+            if (CALIBRATION_FILE_EXISTS)
+            {
+                signal_sub_pedestalA_graph_cali[i] = new TGraph();
+                signal_sub_pedestalA_graph_cali[i]->SetName(Form("signal_sub_pedestalA_graph_cali_%s", boardNamei));
+            }
         }
     };
 
@@ -125,7 +166,7 @@ private:
 
         for (int i = 0; i < nrBoards; ++i)
         {
-            const char * boardNamei = ctx.BoardName[i]; 
+            const char *boardNamei = ctx.BoardName[i];
             // set data
             for (int j = 0; j < 320; ++j)
             {
@@ -141,9 +182,14 @@ private:
                 signal_graph[i]->SetPoint(j, j, signal[i][j]);
                 signal_sub_pedestalA_graph[i]->SetPoint(j, j, signal_sub_pedestalA[i][j]);
                 pedestalB_sub_pedestalA_graph[i]->SetPoint(j, j, pedestalB_sub_pedestalA[i][j]);
+
+                if (CALIBRATION_FILE_EXISTS)
+                {
+                    signal_sub_pedestalA_graph_cali[i]->SetPoint(j, j, signal_sub_pedestalA[i][j] * calFac[i][j]);
+                }
             }
 
-            //set X axis range 0 to 319, title ChannelID
+            // set X axis range 0 to 319, title ChannelID
             pedestalA_graph[i]->GetXaxis()->SetRangeUser(0, 319);
             pedestalA_graph[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
             pedestalB_graph[i]->GetXaxis()->SetRangeUser(0, 319);
@@ -160,6 +206,13 @@ private:
             signal_graph[i]->Write();
             signal_sub_pedestalA_graph[i]->Write();
             pedestalB_sub_pedestalA_graph[i]->Write();
+
+            if (CALIBRATION_FILE_EXISTS)
+            {
+                signal_sub_pedestalA_graph_cali[i]->GetXaxis()->SetRangeUser(0, 319);
+                signal_sub_pedestalA_graph_cali[i]->GetXaxis()->SetTitle(Form("%s ChannelID", boardNamei));
+                signal_sub_pedestalA_graph_cali[i]->Write();
+            }
         }
 
         file_->Close();

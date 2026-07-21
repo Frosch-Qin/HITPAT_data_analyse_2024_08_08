@@ -16,9 +16,9 @@ public:
     std::string name() const override { return "Pos2DMap"; }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
-        file_ = new TFile(Form("output2025/run%d_Pos2DMap.root", ctx.run_number), "RECREATE");
+        file_ = new TFile(Form("output2025/run%d_%s.root", ctx.run_number, name().c_str()), "RECREATE");
 
         histReady_ = false;
         if (!getBinEdges(ctx))
@@ -49,24 +49,37 @@ private:
     int nXbins = 0;
     int nYbins = 0;
 
+    // the range of the difference
     const int nZbins = 1000;
-    const double Zbin_leftedge = -10.0;
-    const double Zbin_rightedge = 10.0;
+    const double Zbin_leftedge = -1.0;
+    const double Zbin_rightedge = 1.0;
 
     std::vector<double> HbinEdges;
     std::vector<double> VbinEdges;
     std::vector<double> ZbinEdges;
 
+    std::vector<double> peaksH;
+    std::vector<double> peaksV;
+
     const double offset_origin = 128.4;
 
-    TH2D *V_PosBias[2] = {nullptr, nullptr};
-    TH2D *H_PosBias[2] = {nullptr, nullptr};
+    std::vector<TH2D *> V_PosBias;
+    std::vector<TH2D *> H_PosBias;
 
-    TH2D *V_PosRes[2] = {nullptr, nullptr};
-    TH2D *H_PosRes[2] = {nullptr, nullptr};
+    std::vector<TH2D *> V_PosRes;
+    std::vector<TH2D *> H_PosRes;
 
-    TH3D *V_3D[2] = {nullptr, nullptr};
-    TH3D *H_3D[2] = {nullptr, nullptr};
+    std::vector<TH1D *> H_PosBias1D;
+    std::vector<TH1D *> V_PosBias1D;
+
+    std::vector<TH1D *> H_PosRes1D;
+    std::vector<TH1D *> V_PosRes1D;
+
+    std::vector<TH3D *> V_3D;
+    std::vector<TH3D *> H_3D;
+
+    std::vector<TH1D *> H_abnormal;
+    int H_abnormal_count = 0;
 
     static bool edgesStrictlyIncreasing(const std::vector<double> &e)
     {
@@ -83,9 +96,9 @@ private:
     void createHistograms(const RunContext &ctx);
     bool getBinEdges(const RunContext &ctx);
 
-    void convertTH3DtoMeanSigma(const TH3D *h3, TH2D *hMean, TH2D *hSigma)
+    void convertTH3DtoMeanSigma(const TH3D *h3, TH2D *hMean, TH2D *hSigma, TH1D *hMean1D, TH1D *hSigma1D)
     {
-        if (!h3 || !hMean || !hSigma)
+        if (!h3 || !hMean || !hSigma || !hMean1D || !hSigma1D)
             return;
 
         int nx = h3->GetNbinsX();
@@ -100,16 +113,26 @@ private:
                     continue;
 
                 hz->SetDirectory(nullptr);
+                double centerx = h3->GetXaxis()->GetBinCenter(ix);
+                double centery = h3->GetYaxis()->GetBinCenter(iy);
 
                 if (hz->GetEntries() > 10)
                 {
-                    hz->Fit("gaus", "Q");
-                    TF1 *f = hz->GetFunction("gaus");
 
-                    if (f)
+                    double mean = hz->GetMean();
+                    double sigma = hz->GetStdDev()/sqrt(2);
+
+                    hMean->SetBinContent(ix, iy, mean);
+                    hSigma->SetBinContent(ix, iy, sigma);
+                    hMean1D->Fill(mean);
+                    hSigma1D->Fill(sigma);
+
+                    if (sigma > 0.2 || abs(mean) > 0.2)
                     {
-                        hMean->SetBinContent(ix, iy, f->GetParameter(1));
-                        hSigma->SetBinContent(ix, iy, f->GetParameter(2));
+                        TH1D *hz_copy = (TH1D *)hz->Clone(Form("hz_abnormal_%d_%d_%d", int(centerx), int(centery), H_abnormal_count++));
+                        hz_copy->SetDirectory(nullptr);
+                        hz_copy->GetXaxis()->SetTitle(h3->GetZaxis()->GetTitle());
+                        H_abnormal.push_back(hz_copy);
                     }
                 }
 
@@ -130,6 +153,9 @@ inline void Pos2DMap::process(Fullframe &frame, long frame_index, FrameTags &tag
     if (tags.SpillID < 0)
         return;
 
+    if (!tags.Has_signal)
+        return;
+
     const int refH = H_boardID[1]; // here: H1 -> board 3
     const int refV = V_boardID[1]; // here: V1 -> board 2
 
@@ -147,6 +173,23 @@ inline void Pos2DMap::process(Fullframe &frame, long frame_index, FrameTags &tag
 
         H_3D[i]->Fill(x, y, Hdiff);
         V_3D[i]->Fill(x, y, Vdiff);
+
+        // // analyse one board, taking the mode of the its own positions as reference.
+        // int binx = H_3D[i]->GetXaxis()->FindBin(x);
+        // double binxcenter = H_3D[i]->GetXaxis()->GetBinCenter(binx);
+        // if (binx > 0 && binx < peaksH.size() + 1)
+        // {
+        //     double refx = peaksH[binx - 1];
+        //     H_3D[i]->Fill(x, y, tags.boardTags[H_boardID[int(i)]].Position - refx);
+        // }
+
+        // int biny = V_3D[i]->GetYaxis()->FindBin(y);
+        // double binycenter = V_3D[i]->GetYaxis()->GetBinCenter(biny);
+        // if (biny > 0 && biny < peaksV.size() + 1)
+        // {
+        //     double refy = peaksV[biny - 1];
+        //     V_3D[i]->Fill(x, y, tags.boardTags[V_boardID[int(i + 1)]].Position - refy);
+        // }
     }
 }
 
@@ -155,9 +198,10 @@ inline void Pos2DMap::createHistograms(const RunContext &ctx)
     if (!file_)
         return;
 
-    dir_ = file_->GetDirectory("Pos2DMap");
+    dir_ = file_->GetDirectory(name().c_str());
+
     if (!dir_)
-        dir_ = file_->mkdir("Pos2DMap");
+        dir_ = file_->mkdir(name().c_str());
     dir_->cd();
 
     ZbinEdges.clear();
@@ -177,47 +221,74 @@ inline void Pos2DMap::createHistograms(const RunContext &ctx)
         const char *vA = ctx.BoardName[V_boardID[i]];
         const char *vB = ctx.BoardName[V_boardID[i + 1]];
 
-        V_3D[i] = new TH3D(Form("V_3D_%s_%s", vA, vB),
+        V_3D.push_back(new TH3D(Form("V_3D_%s_%s", vA, vB),
                            Form("V_3D_%s_%s", vA, vB),
                            nXbins, HbinEdges.data(),
                            nYbins, VbinEdges.data(),
-                           nZbins, ZbinEdges.data());
+                           nZbins, ZbinEdges.data()));
+        V_3D[i]->GetZaxis()->SetTitle(Form("%s - %s [mm]", vB, vA));
 
-        H_3D[i] = new TH3D(Form("H_3D_%s_%s", hA, hB),
+        H_3D.push_back(new TH3D(Form("H_3D_%s_%s", hA, hB),
                            Form("H_3D_%s_%s", hA, hB),
                            nXbins, HbinEdges.data(),
                            nYbins, VbinEdges.data(),
-                           nZbins, ZbinEdges.data());
+                           nZbins, ZbinEdges.data()));
+        H_3D[i]->GetZaxis()->SetTitle(Form("%s - %s [mm]", hB, hA));
 
-        V_PosBias[i] = new TH2D(Form("V_PosBias_%s_%s", vA, vB),
+        V_PosBias.push_back(new TH2D(Form("V_PosBias_%s_%s", vA, vB),
                                 Form("V_PosBias_%s_%s", vA, vB),
                                 nXbins, HbinEdges.data(),
-                                nYbins, VbinEdges.data());
-
-        H_PosBias[i] = new TH2D(Form("H_PosBias_%s_%s", hA, hB),
+                               nYbins, VbinEdges.data()));
+        
+        H_PosBias.push_back(new TH2D(Form("H_PosBias_%s_%s", hA, hB),
                                 Form("H_PosBias_%s_%s", hA, hB),
                                 nXbins, HbinEdges.data(),
-                                nYbins, VbinEdges.data());
+                                nYbins, VbinEdges.data()));
 
-        V_PosRes[i] = new TH2D(Form("V_PosRes_%s_%s", vA, vB),
+        V_PosRes.push_back(new TH2D(Form("V_PosRes_%s_%s", vA, vB),
                                Form("V_PosRes_%s_%s", vA, vB),
                                nXbins, HbinEdges.data(),
-                               nYbins, VbinEdges.data());
+                               nYbins, VbinEdges.data()));
 
-        H_PosRes[i] = new TH2D(Form("H_PosRes_%s_%s", hA, hB),
+        H_PosRes.push_back(new TH2D(Form("H_PosRes_%s_%s", hA, hB),
                                Form("H_PosRes_%s_%s", hA, hB),
                                nXbins, HbinEdges.data(),
-                               nYbins, VbinEdges.data());
+                               nYbins, VbinEdges.data()));
 
         H_PosBias[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
         H_PosBias[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        H_PosBias[i]->GetZaxis()->SetTitle(Form("mean(%s - %s) [mm]", hB, hA));
         V_PosBias[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
         V_PosBias[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        V_PosBias[i]->GetZaxis()->SetTitle(Form("mean(%s - %s) [mm]", vB, vA)); 
 
         H_PosRes[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
         H_PosRes[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        H_PosRes[i]->GetZaxis()->SetTitle(Form("#sigma(%s - %s)/#sqrt{2} [mm]", hB, hA));
         V_PosRes[i]->GetXaxis()->SetTitle(Form("%s position [mm]", xref));
         V_PosRes[i]->GetYaxis()->SetTitle(Form("%s position [mm]", yref));
+        V_PosRes[i]->GetZaxis()->SetTitle(Form("#sigma(%s - %s)/#sqrt{2} [mm]", vB, vA));
+
+        H_PosBias1D.push_back(new TH1D(Form("H_PosBias1D_%s_%s", hA, hB),
+                                  Form("H_PosBias1D_%s_%s", hA, hB),
+                                  100, -1, 1));
+        H_PosBias1D[i]->GetXaxis()->SetTitle(Form("mean(%s - %s) [mm]", hB, hA));
+
+        V_PosBias1D.push_back(new TH1D(Form("V_PosBias1D_%s_%s", vA, vB),
+                                  Form("V_PosBias1D_%s_%s", vA, vB),
+                                  100, -1, 1));
+        V_PosBias1D[i]->GetXaxis()->SetTitle(Form("mean(%s - %s) [mm]", vB, vA));
+
+        
+        H_PosRes1D.push_back(new TH1D(Form("H_PosRes1D_%s_%s", hA, hB),
+                                 Form("H_PosRes1D_%s_%s", hA, hB),
+                                 1000, 0, 0.5));
+        H_PosRes1D[i]->GetXaxis()->SetTitle(Form("#sigma(%s - %s)/#sqrt{2} [mm]", hB, hA));
+
+        V_PosRes1D.push_back(new TH1D(Form("V_PosRes1D_%s_%s", vA, vB),
+                                 Form("V_PosRes1D_%s_%s", vA, vB),
+                                 1000, 0, 0.5));
+        V_PosRes1D[i]->GetXaxis()->SetTitle(Form("#sigma(%s - %s)/#sqrt{2} [mm]", vB, vA));
     }
 }
 
@@ -235,13 +306,18 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
         if (!V_3D[i] || !H_3D[i] || !V_PosBias[i] || !V_PosRes[i] || !H_PosBias[i] || !H_PosRes[i])
             continue;
 
-        convertTH3DtoMeanSigma(V_3D[i], V_PosBias[i], V_PosRes[i]);
-        convertTH3DtoMeanSigma(H_3D[i], H_PosBias[i], H_PosRes[i]);
+        convertTH3DtoMeanSigma(V_3D[i], V_PosBias[i], V_PosRes[i], V_PosBias1D[i], V_PosRes1D[i]);
+        convertTH3DtoMeanSigma(H_3D[i], H_PosBias[i], H_PosRes[i], H_PosBias1D[i], H_PosRes1D[i]);
 
         H_PosBias[i]->Write();
         H_PosRes[i]->Write();
         V_PosBias[i]->Write();
         V_PosRes[i]->Write();
+
+        H_PosBias1D[i]->Write();
+        H_PosRes1D[i]->Write();
+        V_PosBias1D[i]->Write();
+        V_PosRes1D[i]->Write();
 
         const char *hA = ctx.BoardName[H_boardID[i]];
         const char *hB = ctx.BoardName[H_boardID[i + 1]];
@@ -268,7 +344,7 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
 
         // V resolution
         TCanvas *c_Vres = new TCanvas(Form("c_Vres_%s_%s", vA, vB), "", 800, 600);
-        V_PosRes[i]->GetZaxis()->SetRangeUser(0, 1);
+        V_PosRes[i]->GetZaxis()->SetRangeUser(0, 0.5);
         V_PosRes[i]->Draw("colz");
         c_Vres->Write();
 
@@ -276,6 +352,11 @@ inline void Pos2DMap::end_run(const RunContext &ctx)
         delete c_Hres;
         delete c_Vbias;
         delete c_Vres;
+    }
+
+    for (auto *h : H_abnormal)
+    {
+        h->Write();
     }
 
     file_->Close();
@@ -305,9 +386,6 @@ inline bool Pos2DMap::getBinEdges(const RunContext &ctx)
 
     const char *HrefName = ctx.BoardName[H_boardID[1]]; // "H1"
     const char *VrefName = ctx.BoardName[V_boardID[1]]; // "V1"
-
-    std::vector<double> peaksH;
-    std::vector<double> peaksV;
 
     peaksH.reserve(t_H->GetEntries());
     peaksV.reserve(t_V->GetEntries());

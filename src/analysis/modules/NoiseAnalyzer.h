@@ -12,7 +12,7 @@ public:
     }
 
 protected:
-    void on_begin_run(const RunContext &ctx) override
+    void on_begin_run(RunContext &ctx) override
     {
 
         file_ = new TFile(Form("output2025/Noise/run%d_Noise.root", ctx.run_number), "RECREATE");
@@ -48,6 +48,7 @@ protected:
                         {
                             noise_all[i]->Fill(frame.boards[i].data[j]);
                             noise_all_sub_cc[i]->Fill(frame.boards[i].data[j] - mean_first_4_channel);
+                            noise_uncommon[i]->Fill(frame.boards[i].data[j] - mean_all);
 
                             noise_channel[i]->Fill(j, frame.boards[i].data[j]);
                             noise_channel_sub_cc[i]->Fill(j, frame.boards[i].data[j] - mean_first_4_channel);
@@ -93,21 +94,25 @@ protected:
             noise_all_sub_cc[i]->Scale(1.0 / noise_all_sub_cc[i]->Integral());
             noise_all_sub_cc[i]->GetXaxis()->SetTitle(Form("%s noise (ADC)", boardNamei));
             noise_all_sub_cc[i]->GetYaxis()->SetTitle("Fraction");
+            noise_uncommon[i]->Scale(1.0 / noise_uncommon[i]->Integral());
+            noise_uncommon[i]->GetXaxis()->SetTitle(Form("%s uncommon noise (ADC)", boardNamei));
+            noise_uncommon[i]->GetYaxis()->SetTitle("Fraction");
             noise_channel[i]->Scale(1.0);
-            noise_channel[i]->GetXaxis()->SetTitle(Form("%s Channel ID",boardNamei));
+            noise_channel[i]->GetXaxis()->SetTitle(Form("%s Channel ID", boardNamei));
             noise_channel[i]->GetYaxis()->SetTitle(Form("%s Noise (ADC)", boardNamei));
             noise_channel_sub_cc[i]->Scale(1.0);
-            noise_channel_sub_cc[i]->GetXaxis()->SetTitle(Form("%s Channel ID",boardNamei));
+            noise_channel_sub_cc[i]->GetXaxis()->SetTitle(Form("%s Channel ID", boardNamei));
             noise_channel_sub_cc[i]->GetYaxis()->SetTitle(Form("%s Noise (ADC)", boardNamei));
             noise_frame_std_hist[i]->Scale(1.0 / noise_frame_std_hist[i]->Integral());
             noise_frame_std_hist[i]->GetXaxis()->SetTitle("Noise frame std (ADC)");
             noise_frame_std_hist[i]->GetYaxis()->SetTitle("Fraction");
 
-            noise_correlation[i]->GetXaxis()->SetTitle(Form("%s Channel 318",boardNamei));
-            noise_correlation[i]->GetYaxis()->SetTitle(Form("%s Channel 319",boardNamei));
+            noise_correlation[i]->GetXaxis()->SetTitle(Form("%s Channel 318", boardNamei));
+            noise_correlation[i]->GetYaxis()->SetTitle(Form("%s Channel 319", boardNamei));
 
             noise_all[i]->Write();
             noise_frame_mean[i]->Write();
+            noise_uncommon[i]->Write();
             noise_all_sub_cc[i]->Write();
             noise_channel[i]->Write();
             noise_channel_sub_cc[i]->Write();
@@ -130,6 +135,7 @@ private:
     TH1D *noise_frame_mean[6];     // the common mode noise， the avg of all the channels
     TH1D *noise_all_sub_cc[6];     // the uncommon mode
     TH1D *noise_frame_std_hist[6]; // noise frame
+    TH1D *noise_uncommon[6]; // noise frame after common mode subtraction
 
     void createHistograms(const RunContext &ctx)
     {
@@ -143,13 +149,15 @@ private:
 
         for (int i = 0; i < nrBoards; ++i)
         {
-            noise_all[i] = new TH1D(Form("noise_total_%d", i), Form("noise_total_%d", i), 201, -100.5, 100.5);
-            noise_frame_mean[i] = new TH1D(Form("noise_baseline_%d", i), Form("noise_baseline_%d", i), 201, -100.5, 100.5);
-            noise_all_sub_cc[i] = new TH1D(Form("noise_after_cc_%d", i), Form("noise_after_cc_%d", i), 201, -100.5, 100.5);
-            noise_frame_std_hist[i] = new TH1D(Form("noise_frame_std_%d", i), Form("noise_frame_std_%d", i), 100, 0, 20); // standard deviation per frame
-            noise_channel[i] = new TH2D(Form("noise_channel_%d", i), Form("noise_channel_%d", i), 321, -0.5, 320.5, 201, -100.5, 100.5);
-            noise_channel_sub_cc[i] = new TH2D(Form("noise_channel_sub_cc_%d", i), Form("noise_channel_sub_cc_%d", i), 321, -0.5, 320.5, 201, -100.5, 100.5);
-            noise_correlation[i] = new TH2D(Form("noise_correlation_%d", i), Form("noise_correlation_%d", i), 201, -100.5, 100.5, 201, -100.5, 100.5);
+            const char *boardName = ctx.BoardName[i];
+            noise_all[i] = new TH1D(Form("noise_total_%s", boardName), Form("noise_total_%s", boardName), 201, -100.5, 100.5);
+            noise_frame_mean[i] = new TH1D(Form("noise_common_%s", boardName), Form("noise_common_%s", boardName), 201, -100.5, 100.5);
+            noise_uncommon[i] = new TH1D(Form("noise_uncommon_%s", boardName), Form("noise_uncommon_%s", boardName), 201, -100.5, 100.5);
+            noise_all_sub_cc[i] = new TH1D(Form("noise_after_cc_%s", boardName), Form("noise_after_cc_%s", boardName), 201, -100.5, 100.5);
+            noise_frame_std_hist[i] = new TH1D(Form("noise_frame_std_%s", boardName), Form("noise_frame_std_%s", boardName), 100, 0, 20); // standard deviation per frame
+            noise_channel[i] = new TH2D(Form("noise_channel_%s", boardName), Form("noise_channel_%s", boardName), 321, -0.5, 320.5, 201, -100.5, 100.5);
+            noise_channel_sub_cc[i] = new TH2D(Form("noise_channel_sub_cc_%s", boardName), Form("noise_channel_sub_cc_%s", boardName), 321, -0.5, 320.5, 201, -100.5, 100.5);
+            noise_correlation[i] = new TH2D(Form("noise_correlation_%s", boardName), Form("noise_correlation_%s", boardName), 201, -100.5, 100.5, 201, -100.5, 100.5);
         }
     }
 
